@@ -101,7 +101,7 @@ sprite-env services create gatanas \
 | `GATANAS_HOME` | `~/.gatanas` | Dónde vive su acta |
 | `OPENROUTER_CONNECTION` | ver `.env.example` | ID del conector de OpenRouter |
 | `GATANAS_MODEL_*` | ver `.env.example` | Modelos por tarea (chat: `google/gemma-4-31b-it:free`) |
-| `GATANAS_MODEL_CHAT_FALLBACKS` | `nvidia/nemotron-3.5-lightning:free,z-ai/glm-5.3-flash` | Cadena de reserva del chat: free primero, pagado al final |
+| `GATANAS_MODEL_CHAT_FALLBACKS` | `z-ai/glm-5.3-flash` | Reserva del chat si el modelo `:free` está saturado |
 | `GATANAS_HUNT_INTERVAL_SEC` | `900` | Cada cuánto caza (0 = nunca) |
 | `GATANAS_DAILY_BUDGET_USD` | `0.5` | Tope de gasto por día |
 | `GATANAS_LIVES` | `9` | Nunca dudes del gato |
