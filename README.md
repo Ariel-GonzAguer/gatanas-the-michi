@@ -67,7 +67,7 @@ La API key de OpenRouter de esta casa tiene un tope de **6.66 USD**. El gato
 lo sabe (`src/wallet.ts`): caza con un tope diario, mira el gasto real que
 reporta OpenRouter en cada respuesta, y cuando el total se acerca al tope de
 la llave, **ayuna**. Un gato que gasto más de lo que su humano le dio no
-merece atún.
+merece churus.
 
 ## Cómo se construye y se arranca
 
@@ -100,7 +100,8 @@ sprite-env services create gatanas \
 | `SPRITE_NAME` | `gatanas-the-michi` | Su casa en el plano de control |
 | `GATANAS_HOME` | `~/.gatanas` | Dónde vive su acta |
 | `OPENROUTER_CONNECTION` | ver `.env.example` | ID del conector de OpenRouter |
-| `GATANAS_MODEL_*` | `z-ai/glm-5.3-flash` | Modelos por tarea |
+| `GATANAS_MODEL_*` | ver `.env.example` | Modelos por tarea (chat: `google/gemma-4-31b-it:free`) |
+| `GATANAS_MODEL_CHAT_FALLBACKS` | `nvidia/nemotron-3.5-lightning:free,z-ai/glm-5.3-flash` | Cadena de reserva del chat: free primero, pagado al final |
 | `GATANAS_HUNT_INTERVAL_SEC` | `900` | Cada cuánto caza (0 = nunca) |
 | `GATANAS_DAILY_BUDGET_USD` | `0.5` | Tope de gasto por día |
 | `GATANAS_LIVES` | `9` | Nunca dudes del gato |
@@ -138,4 +139,4 @@ Construido del 26 al 29 de noviembre de 2026 para el hackathon
 habla por dos **conectores de Sprites**: OpenRouter (voz) y GitHub (su propio
 código, que el gato comitea desde dentro de su casa).
 
-— Gatanás The Michi. mrrp.
+— Gatanás The Michi. prrrr.
