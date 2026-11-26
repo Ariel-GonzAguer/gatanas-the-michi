@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Deploy de Gatanás The Michi a su Sprite.
+# Gatanás ronronea de satisfacción al final: prrrr.
 #
 # Empaqueta dist/ y los archivos de runtime, los manda al Sprite por stdin
 # (el gato no tiene SSH: usa el exec de la API de Sprites) y configura el
