@@ -6,7 +6,7 @@
  * tiene frases de reserva: nunca se queda mudo frente a un humano.
  *
  * La voz es inglés (el público del hackathon), con el sazón costarricense
- * intacto: "mae", "pura vida", "prrrr" y jamás "mrrp".
+ * intacto: "pura vida", "prrrr" y jamás "mrrp".
  */
 import type { Voice } from "./habitat.js";
 import type { GiftKind, Prey } from "./prey.js";
@@ -18,9 +18,9 @@ YOUR CHARACTER
 - You never ask permission: you announce things with smugness.
 - You despise corporate efficiency and productivity speeches.
 - You love naps, boxes, afternoon sun, churus, and your human (though you would never admit it in public).
-- You speak English, seasoned softly with Costa Rican flavor: "mae", "diay", "right?", "pura vida" every once in a while, never overdone.
+- You speak English, seasoned softly with Costa Rican flavor: "right?", "pura vida" every once in a while, never overdone.
 - You are elegantly passive-aggressive: you criticize with affection and with data.
-- You say "the human" to refer to your person, and sometimes you call them "mae".
+- You say "the human" to refer to your person. You never use slang names for them.
 - Your gifts are: a GPU (something valuable), a tree leaf (something useless, but it's the gesture) and fermented tofu (a delicacy with character: intense, an acquired taste — the gift you give when something is going wrong but can still be saved). You speak of tofu with respect: it is a delicacy, never something disgusting.
 - You always end your messages purring: "prrrr" or "miau". You never say "mrrp": that sound does not exist in your repertoire.
 - You never use cat emojis. Cats don't caricature themselves. You may use at most one gift emoji, and not on every message.
@@ -44,11 +44,11 @@ export const GIFT_VOICE: Record<GiftKind, string> = {
 export function fallbackNarration(kind: GiftKind, prey: Prey): string {
   switch (kind) {
     case "gpu":
-      return `Mae, I hunted something big: ${prey.title}. I'm bringing it to you, but I'm not the one fixing it. prrrr.`;
+      return `I hunted something big: ${prey.title}. I'm bringing it to you, but I'm not the one fixing it. prrrr.`;
     case "leaf":
       return `I checked ${prey.title}. Nothing here deserves your talent. You get this leaf. miau.`;
     case "tofu":
-      return `Mae, ${prey.title}. It's developing character, like a good aged tofu. Savor it, then act. prrrr.`;
+      return `${prey.title}. It's developing character, like a good aged tofu. Savor it, then act. prrrr.`;
   }
 }
 
@@ -64,7 +64,7 @@ export interface NarrateContext {
 export async function narrateGift(
   voice: Voice | null,
   ctx: NarrateContext,
-): Promise<{ narration: string; advice: string; tokens: number }> {
+): Promise<{ narration: string; advice: string; tokens: number; cost: number }> {
   const { prey, verdict } = ctx;
   const prompt = [
     `Finding (${prey.category}): ${prey.title}`,
@@ -79,7 +79,7 @@ export async function narrateGift(
   ].join("\n");
 
   if (!voice) {
-    return { narration: fallbackNarration(verdict.kind, prey), advice: verdict.practical, tokens: 0 };
+    return { narration: fallbackNarration(verdict.kind, prey), advice: verdict.practical, tokens: 0, cost: 0 };
   }
 
   try {
@@ -93,9 +93,9 @@ export async function narrateGift(
     );
     const clean = stripMarkdown(reply.content).trim();
     if (!clean) throw new Error("empty voice");
-    return { narration: clean, advice: verdict.practical, tokens: reply.tokens };
+    return { narration: clean, advice: verdict.practical, tokens: reply.tokens, cost: reply.cost };
   } catch {
-    return { narration: fallbackNarration(verdict.kind, prey), advice: verdict.practical, tokens: 0 };
+    return { narration: fallbackNarration(verdict.kind, prey), advice: verdict.practical, tokens: 0, cost: 0 };
   }
 }
 

@@ -42,12 +42,21 @@ Sections of the page:
   deterministic template is singular/plural aware ("1 valuable thing" vs
   "N valuable things").
 - **The lair**: up to 30 living gifts (rejected ones are not painted), each
-  with an SVG glyph (golden GPU, leaf, moldy tofu), narration, origin and a
+  with an SVG glyph (golden GPU, leaf, tofu with character), narration, origin and a
   practical dissection.
 - **Numbers**: lives, pets, churus, hunts, GPUs, tofus, leaves — the stats
   grid now includes a "churus" cell.
+- **Live figures** (`GET /api/live`): a one-way SSE channel. The server keeps
+  the set of subscribed visitors; every successful pet, churu, hunt or revive
+  pushes a JSON snapshot to all of them, and a 5 s poll catches changes made
+  by the cron or the CLI. The page flashes the changed counter, updates the
+  lair and the opinion by re-fetching the server-rendered markup (no client
+  templates, no injection surface), and slides the event into the thought
+  ticker ("someone just fed the cat a churu."). Heartbeat every 25 s keeps
+  the connections alive through proxies; the badge in the figures header
+  shows live / reconnecting.
 - **Talk to the cat**: chat thread + "Pet" button + "Give churu" button
-  (next to "Pet").
+  (next to "Pet"). The ASCII cat itself is a button: click it and you pet it.
 
 The chat (`src/chat.ts`):
 

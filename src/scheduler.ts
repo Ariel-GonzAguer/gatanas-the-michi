@@ -115,7 +115,7 @@ export class Scheduler {
     if (!shouldRuminate(input)) return;
     const opinion = await ruminate(this.d.voice, input);
     if (!opinion) return;
-    this.d.wallet.charge(0, opinion.tokens ?? 0);
+    this.d.wallet.charge(opinion.cost ?? 0, opinion.tokens ?? 0);
     await this.d.memory.update((m) => {
       m.opinion = { quote: opinion.quote, ts: opinion.ts, tokens: opinion.tokens ?? 0 };
     });

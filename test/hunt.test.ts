@@ -5,7 +5,7 @@
  *  - no repite el mismo hallazgo el mismo día,
  *  - no gasta tokens en hojas de árbol,
  *  - respeta el monedero y las vidas,
- *  - deja el regalo en el altar aunque la entrega falle.
+ *  - registra en el monedero el costo real que reporta OpenRouter.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -72,7 +72,7 @@ class FakeVoice {
   }
   async chat(_task: string, messages: ChatMessage[]): Promise<VoiceReply> {
     this.calls.push(messages);
-    return { content: "Mae, brought you something. prrrr.", tokens: 100, cost: 0.0001 };
+    return { content: "Brought you something. prrrr.", tokens: 100, cost: 0.0001 };
   }
 }
 
@@ -88,18 +88,14 @@ async function engine(opts: { budgetUsd?: number; voice?: FakeVoice | null } = {
   await memory.load();
   const wallet = new Wallet(cfg, memory);
   const voice = opts.voice === undefined ? new FakeVoice() : opts.voice;
-  const delivered: string[] = [];
   const e = new HuntEngine(cfg, {
     voice: voice as unknown as Voice,
     memory,
     wallet,
     nowIso: frozenNow("2026-11-26T18:00:00.000Z"),
     collect: fixtureCollector(preys()),
-    deliver: async (g) => {
-      delivered.push(g.kind);
-    },
   });
-  return { e, memory, wallet, voice, delivered };
+  return { e, memory, wallet, voice };
 }
 
 test("brings GPUs and tofus and spends no tokens on leaves", async () => {
@@ -130,31 +126,19 @@ test("with an empty wallet it does not hunt", async () => {
   assert.match(out.reason ?? "", /budget/);
 });
 
-test("if delivery fails, the gift still lands in the lair", async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "gatanas-hunt-deliver-"));
-  const cfg = loadConfig({ home: dir, lives: 9 });
-  const memory = new Memory(path.join(dir, "memory.json"), "Gatanás The Michi");
-  await memory.load();
-  const wallet = new Wallet(cfg, memory);
-  const e = new HuntEngine(cfg, {
-    voice: new FakeVoice() as unknown as Voice,
-    memory,
-    wallet,
-    nowIso: frozenNow("2026-11-26T18:00:00.000Z"),
-    collect: fixtureCollector(preys()),
-    deliver: async () => {
-      throw new Error("sin push");
-    },
-  });
+test("the hunt charges the wallet with the real cost OpenRouter reports", async () => {
+  const { e, memory } = await engine();
   const out = await e.hunt("manual");
-  assert.ok(out.gifts.length > 0);
-  assert.ok(memory.state.gifts.length > 0);
+  // Dos narraciones con voz: cada una cuesta 0.0001 USD en el FakeVoice.
+  assert.equal(out.usd > 0, true, "el outcome debe traer el costo real");
+  assert.ok(Math.abs(memory.state.spentUsd - out.usd) < 1e-9);
+  assert.ok(memory.spentTodayUsd() > 0);
 });
 
 test("spend accumulates in the cat's acta", async () => {
   const { e, wallet, memory } = await engine();
-  await e.hunt("manual");
+  const out = await e.hunt("manual");
   wallet.charge(0.25, 0);
-  assert.equal(memory.state.spentUsd, 0.25);
-  assert.equal(memory.spentTodayUsd(), 0.25);
+  assert.equal(memory.state.spentUsd, out.usd + 0.25);
+  assert.equal(memory.spentTodayUsd(), out.usd + 0.25);
 });

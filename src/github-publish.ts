@@ -84,7 +84,7 @@ async function main(): Promise<void> {
       : "Gatanás: new hunt published. prrrr.";
 
   if (!connection || !repo) {
-    throw new Error("Faltan GITHUB_CONNECTION o REPO (ver README).");
+    throw new Error("Missing GITHUB_CONNECTION or REPO (see README).");
   }
 
   const files = await collectFiles(root);
@@ -93,7 +93,7 @@ async function main(): Promise<void> {
   // 1. Rama actual (si no existe main, se crea desde la primera).
   const ref = await gh(gatewayBase, connection, "GET", `/repos/${repo}/git/ref/heads/${branch}`);
   if (ref.status !== 200) {
-    throw new Error(`No pude leer la rama ${branch}: ${ref.status} ${ref.text.slice(0, 200)}`);
+    throw new Error(`couldn't read branch ${branch}: ${ref.status} ${ref.text.slice(0, 200)}`);
   }
   const headSha = (ref.json as { object: { sha: string } }).object.sha;
 
@@ -124,7 +124,7 @@ async function main(): Promise<void> {
     parents: [headSha],
   });
   if (commit.status !== 201 && commit.status !== 200) {
-    throw new Error(`No pude commitear: ${commit.status} ${commit.text.slice(0, 300)}`);
+    throw new Error(`couldn't commit: ${commit.status} ${commit.text.slice(0, 300)}`);
   }
   const commitSha = (commit.json as { sha: string }).sha;
 
@@ -134,7 +134,7 @@ async function main(): Promise<void> {
     force: false,
   });
   if (upd.status !== 200) {
-    throw new Error(`No pude mover la rama: ${upd.status} ${upd.text.slice(0, 300)}`);
+    throw new Error(`couldn't move the branch: ${upd.status} ${upd.text.slice(0, 300)}`);
   }
 
   console.log(`✓ published ${commitSha.slice(0, 7)} on ${repo}@${branch} (${files.length} files)`);

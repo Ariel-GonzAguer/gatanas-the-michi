@@ -57,6 +57,12 @@ export class Wallet {
     if (this.spentToday >= this.cfg.dailyBudgetUsd) {
       return { ok: false, reason: `today's budget is spent (${this.spentToday.toFixed(3)} USD)` };
     }
+    if (this.cfg.dailyTokenBudget > 0 && this.memory.tokensToday() >= this.cfg.dailyTokenBudget) {
+      return {
+        ok: false,
+        reason: `today's token budget is spent (${this.memory.tokensToday()} of ${this.cfg.dailyTokenBudget} tokens). The cat naps.`,
+      };
+    }
     if (this.spentTotal >= this.capUsd - Wallet.RESERVE_USD) {
       return {
         ok: false,

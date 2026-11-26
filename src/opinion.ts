@@ -60,7 +60,7 @@ export async function ruminate(voice: Voice | null, input: RuminationInput): Pro
 
   try {
     const reply = await voice.chat(
-      "opinion" as never,
+      "opinion",
       [
         { role: "system", content: PERSONA.replace("{LEN}", "90") },
         {
@@ -83,7 +83,7 @@ export async function ruminate(voice: Voice | null, input: RuminationInput): Pro
       ? line
       : `${CONFESSION_PREFIX} ${line}`;
     if (quote.length < CONFESSION_PREFIX.length + 10) throw new Error("empty rumination");
-    return { quote, ts: input.nowIso, tokens: reply.tokens };
+    return { quote, ts: input.nowIso, tokens: reply.tokens, cost: reply.cost };
   } catch {
     return fallback;
   }

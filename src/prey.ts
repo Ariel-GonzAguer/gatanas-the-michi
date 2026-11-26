@@ -9,10 +9,8 @@
 export type PreyCategory =
   | "process"
   | "disk"
-  | "memory"
   | "service"
   | "log"
-  | "certificate"
   | "arena"
   | "campaign";
 

@@ -15,7 +15,7 @@ fast before the key cap, a written daily opinion of his human, a churu counter,
 a public lair at https://gatanas-the-michi-b6zf5.sprites.app — and he
 **publishes this very repo himself**, from inside the Sprite, through the
 GitHub connector (no `git push` involved). TypeScript, zero runtime
-dependencies, 36 tests. Built for Hacksgiving 2026. prrrr.
+dependencies, 43 tests. Built for Hacksgiving 2026. prrrr.
 
 ## What it does, exactly
 
@@ -39,8 +39,8 @@ cat goes hunting around the Sprite:
    GLM 5.3 Flash via OpenRouter, through the **Sprites connector**. The cat
    never sees the API key. The model doesn't choose the gift; the diet already
    decided. The model only tells the story, in character.
-4. **It leaves it in the lair** (`src/altar.ts`) and, if configured, pushes it
-   to the human's phone.
+4. **It leaves it in the lair** (`src/altar.ts`): the public page where every
+   gift lands, next to the cat's daily opinion of you.
 
 Tree leaves don't spend a single token. Frugality is part of the character.
 
@@ -96,7 +96,7 @@ deserve churus.
 ```bash
 npm install
 npm run build
-npm test          # 36 tests, no network, no real disk
+npm test          # 43 tests, no network, no real disk
 node dist/main.js
 ```
 

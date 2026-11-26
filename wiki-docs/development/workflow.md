@@ -40,7 +40,7 @@ GATANAS_HOME=/tmp/gato PORT=8099 GATANAS_HUNT_INTERVAL_SEC=0 npm start
 ## 3. Compilation and style
 
 - Strict ESM: `"type": "module"`, relative imports with the `.js`
-  extension, `verbatimModuleSyntax`, `noUncheckedIndexedAccess`.
+  extension, `noUncheckedIndexedAccess`.
 - `engines.node >= 22.6` (for `--experimental-strip-types` in `dev`).
 - No linter configured: the code itself sets the style (comment-header
   sections per module, explicit types on public signatures).

@@ -18,7 +18,8 @@ hunt round / rumination
         ▼
 Wallet.canSpend()
         ├── spentTodayUsd >= dailyBudgetUsd ──→ no: "today's budget is spent"
-        ├── spentUsd >= capUsd - RESERVE_USD ──→ no: "the key is nearly at its cap"
+        ├── tokensToday >= dailyTokenBudget ──→ no: "today's token budget is spent"
+        ├── spentUsd >= capUsd - RESERVE_USD ──→ no: "the key is near its cap"
         └── yes ──→ Voice.chat(...) ──→ Wallet.charge(cost, tokens)
                                         │
                                         ▼
@@ -30,12 +31,13 @@ Wallet.canSpend()
 - `RESERVE_USD = 0.5`: a safety margin so the cat never reaches the exact
   cap of the key.
 - The real spend is reported by OpenRouter in every response (`usage.cost`);
-  it is not our own estimate.
+  it is not our own estimate. Both the hunt's narrations and the nightly
+  rumination charge that real cost into the wallet.
 
-The literal `reason` strings live in `src/wallet.ts` and are written in the
-cat's Spanish voice, e.g. `presupuesto de hoy agotado (…)` ("today's budget
-is spent") and `la llave está casi en su tope (…)` ("the key is nearly at
-its cap").
+The literal `reason` strings live in `src/wallet.ts`, in English:
+`today's budget is spent (N.NNN USD)`, `today's token budget is spent (N of
+N tokens). The cat naps.` and `the key is near its cap (N.NN of 6.66 USD).
+The cat fasts.`
 
 ## Files involved
 

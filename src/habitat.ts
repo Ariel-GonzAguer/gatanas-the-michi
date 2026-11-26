@@ -44,7 +44,7 @@ export class SpritesApi {
   }
 
   private async call<T>(method: string, path: string, body?: unknown): Promise<T> {
-    if (!this.token) throw new Error("Gatanás no tiene llave del plano de control");
+    if (!this.token) throw new Error("Gatanás has no key to the control plane");
     const res = await fetch(`${this.baseUrl}${path}`, {
       method,
       headers: { Authorization: `Bearer ${this.token}`, "Content-Type": "application/json" },
@@ -84,7 +84,7 @@ export class SpritesApi {
     const res = await fetch(`${this.baseUrl}/v1/sprites/${this.spriteName}/filesystem/${clean}`, {
       headers: { Authorization: `Bearer ${this.token}` },
     });
-    if (!res.ok) throw new Error(`No pude leer ${filePath}: ${res.status}`);
+    if (!res.ok) throw new Error(`Couldn't read ${filePath}: ${res.status}`);
     return res.text();
   }
 

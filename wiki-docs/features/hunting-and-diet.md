@@ -8,7 +8,8 @@ lair, the wallet, the lives) revolves around this hunt.
 
 A traditional monitoring agent sends alerts. Gatanás hunts: it decides which
 finding deserves attention (GPU), which is straw (a tree leaf) and which is
-rotting (fermented tofu). The classification is 100% heuristic and
+fermenting — a delicacy with character (fermented tofu). The classification is
+100% heuristic and
 deterministic; the LLM only supplies the prose. That separation is the central
 design decision: a model hallucination can never inflate the severity of a
 finding.
@@ -35,28 +36,24 @@ chooseGift ──→ adjustments for previous rejections and lives
         │
         ▼
 memory.addGift + giftedKeys[today] + memory.save
-        │
-        ▼
-deliver (optional, never breaks the hunt)
 ```
 
 Exact rules of the heuristic (`src/diet.ts`). The matched titles are the
-literal strings emitted by `collect.ts`, kept in Spanish in the code:
+literal English strings emitted by `collect.ts`:
 
 | Category | Condition | Gift | Confidence |
 |-----------|-----------|--------|-----------|
-| `disk` | title `disco al N%` ("disk at N%") with N ≥ 92 | GPU | 0.95 |
+| `disk` | title `disk at N%` with N ≥ 92 | GPU | 0.95 |
 | `disk` | N ≥ 80 and seen on 2+ nights | tofu | 0.85 |
 | `disk` | N ≥ 80 first night | leaf | 0.85 |
 | `process` | zombie with 3+ sightings | tofu | 0.85 |
 | `process` | newborn zombie | leaf | 0.85 |
-| `service` | title `detenido` ("stopped") and lives remain | GPU | 0.90 |
-| `service` | title `detenido` ("stopped") with no lives left | tofu | 0.60 |
-| `log` | title `errores frescos` ("fresh errors") with 8+ error matches | GPU | 0.95 |
-| `log` | title `errores frescos` ("fresh errors") with 3+ matches | tofu | 0.85 |
-| `log` | title `gigante` ("giant log") on 2+ nights | tofu | 0.85 |
+| `service` | title `service X stopped` and lives remain | GPU | 0.90 |
+| `service` | title `service X stopped` with no lives left | tofu | 0.60 |
+| `log` | title `fresh errors in X` with 8+ error matches | GPU | 0.95 |
+| `log` | title `fresh errors in X` with 3+ matches | tofu | 0.85 |
+| `log` | title `huge X log (N MB)` on 2+ nights | tofu | 0.85 |
 | `arena` | always (`/tmp` > 512 MiB in `collect`) | GPU | 0.90 |
-| `certificate` | title `vence` ("expires") | tofu | 0.85 |
 | any | no rule applies | `null` → leaf | 0.40 |
 
 `chooseGift` applies two corrections on top of the base verdict:
@@ -96,6 +93,7 @@ export function timeOfDay(iso: string): string
 | `gifts` | `Gift[]` | Gifts of the round. |
 | `found` | `number` | Prey detected. |
 | `tokens` | `number` | Tokens spent on narration. |
+| `usd` | `number` | Real USD cost reported by OpenRouter for this round. |
 
 Relevant environment variables: `GATANAS_HUNT_INTERVAL_SEC` (900),
 `GATANAS_DAILY_BUDGET_USD` (0.5), `GATANAS_DAILY_TOKEN_BUDGET` (40000).

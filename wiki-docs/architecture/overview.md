@@ -38,7 +38,6 @@ Full inventory of the source code in `src/`.
 | `config` | `src/config.ts` | Environment-variable configuration with sensible defaults. |
 | `cli` | `src/cli.ts` | Terminal: `hunt`, `altar`/`guarida`, `lives`, `meow`, `churus`, `revive` (alias `nahualada`). |
 | `github-publish` | `src/github-publish.ts` | Publishes the repo itself through the GitHub API via the OAuth connector. |
-| `deliver` | `src/deliver.ts` | Gift delivery (optional Pushover via connector; the lair is the default destination). |
 | `types` | `src/types.ts` | Re-exports of public types for external consumers and tests. |
 
 ## 3. How the layers relate
@@ -83,7 +82,7 @@ Full inventory of the source code in `src/`.
   (`fallbackNarration`); the wallet puts the brakes on hunting when spend
   gets close to the key's cap.
 - **Strict ESM**: imports with the `.js` extension, `type: module`,
-  `verbatimModuleSyntax`. TypeScript compiles to `dist/` with `tsc`.
+  `noUncheckedIndexedAccess`. TypeScript compiles to `dist/` with `tsc`.
 - **Testable determinism**: `HuntEngine`, `Memory`, and `collectLocalPrey`
   receive their collaborators by injection; the tests use doubles
   (see [testing](../development/testing.md)).

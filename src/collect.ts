@@ -36,8 +36,6 @@ export interface CollectOptions {
   logBigLines?: number;
   /** Free disk %, por debajo del cual no hay hoja que traer. */
   diskFreePct?: number;
-  /** A partir de cuántos segundos un proceso es sospechoso. */
-  longRunSec?: number;
 }
 
 export const DEFAULT_OPTIONS: Required<Omit<CollectOptions, "host">> = {
@@ -46,7 +44,6 @@ export const DEFAULT_OPTIONS: Required<Omit<CollectOptions, "host">> = {
   logBigBytes: 50 * 1024 * 1024,
   logBigLines: 1_000_000,
   diskFreePct: 5,
-  longRunSec: 6 * 3600,
 };
 
 function clampOptions(opts: CollectOptions): Required<Omit<CollectOptions, "host">> & { host: string } {
@@ -92,17 +89,16 @@ export async function collectLocalPrey(deps: CollectDeps, options: CollectOption
   const homeDir = deps.homeDir ?? "/home/sprite";
   const out: Prey[] = [];
 
-  // --- Procesos: zombis y corredores de maratón --------------------------
+  // --- Procesos: zombis ---------------------------------------------------
   const procNames = await deps.listDir(procDir).catch(() => []);
   for (const entry of procNames) {
     if (!/^\d+$/.test(entry.name)) continue;
     const stat = await deps.readFile(path.join(procDir, entry.name, "stat")).catch(() => "");
     if (!stat) continue;
     const pid = Number(entry.name);
-    // Formato: pid (comm) state ppid ... starttime(22º campo)
+    // Formato: pid (comm) state ppid ...
     const rest = stat.slice(stat.lastIndexOf(")") + 2).split(" ");
     const state = rest[0];
-    const startTicks = Number(rest[19]);
     let comm = stat.slice(stat.indexOf("(") + 1, stat.lastIndexOf(")"));
     if (!comm) comm = "something";
     const commShort = comm.slice(0, 40);
@@ -117,17 +113,6 @@ export async function collectLocalPrey(deps: CollectDeps, options: CollectOption
           `pid ${pid} state Z (defunct) — neither dies nor breathes.`,
         ),
       );
-      continue;
-    }
-    if (Number.isFinite(startTicks)) {
-      const startSec = startTicks / 100; // CLK_TCK=100 en Linux moderno
-      if (fresh(startSec, now, o.freshSec * 4)) {
-        // Nacen procesos todo el tiempo: solo molesta si es un zombi o un
-        // corredor que lleva horas.
-      } else {
-        const age = now / 1000 - startSec;
-        if (age > o.longRunSec) continue; // normal para un Sprite que duerme
-      }
     }
   }
 
@@ -137,10 +122,6 @@ export async function collectLocalPrey(deps: CollectDeps, options: CollectOption
   const rootLine = disk.split("\n").find((l) => l.split(" ")[1] === "/");
   if (rootLine) {
     const dev = rootLine.split(" ")[0];
-    const fsInfo = await deps.readFile(path.join(procDir, "mounts")).catch(() => "");
-    void fsInfo;
-    const body = await deps.readFile(path.join(procDir, "misc")).catch(() => "");
-    void body;
     // statvfs no está en /proc: usamos fs.statfs vía el helper de abajo.
     const s = await statfsSafe(deps);
     if (s) {

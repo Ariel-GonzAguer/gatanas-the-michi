@@ -5,7 +5,7 @@ the compiled test build. No testing dependencies: no vitest, no jest.
 
 ## 1. Summary
 
-36 tests in 6 files, all with no network and no real disk: every module
+43 tests in 7 files, all with no network and no real disk: every module
 with behavior receives its collaborators by injection and the tests use
 doubles. `npm test` compiles and runs everything.
 
@@ -24,9 +24,10 @@ npm test   # tsc -p tsconfig.test.json && node --test dist-test/test/*.test.js
 |---------|----------|---------|
 | `test/diet.test.ts` | The heuristic contract: exact disk thresholds (95% is a GPU with high confidence, 85% is tofu if it's been two nights / leaf on the first, 40% doesn't even make a leaf), errors (8 GPU / 3 tofu), zombies (3 sightings), the full sandbox that's always a GPU, a stopped service, unknown categories that leave the cat doubting, rejected tofus that degrade to leaf, and a GPU with no lives that drops to tofu. | 10 |
 | `test/collect.test.ts` | What is prey and what isn't: disk measured with injectable `statfs`, zombies vs normal processes, fresh vs old logs. | 4 |
-| `test/hunt.test.ts` | The full engine with a fake voice: no repeating a find on the same day, leaves without tokens, an empty wallet that puts the brakes on, a failed delivery that doesn't break the hunt, accumulated spend in the acta. | 5 |
+| `test/hunt.test.ts` | The full engine with a fake voice: no repeating a find on the same day, leaves without tokens, an empty wallet that puts the brakes on, the real OpenRouter cost charged into the wallet, accumulated spend in the acta. | 5 |
+| `test/wallet.test.ts` | The wallet's contract: an empty wallet lets the cat hunt, the daily USD cap stops it, the daily token cap stops it too, the key cap keeps a 0.5 USD reserve, and `charge` ignores zero-cost replies but records real ones. | 5 |
 | `test/lives.test.ts` | The pact of the lives: born with 9, losing costs 1, spending restores the checkpoint, the life is given back if the restore fails, without the key there is no restore, rebirth doesn't erase gifts. | 6 |
-| `test/altar.test.ts` | The lair's HTTP contract: served at `/` and `/guarida`, JSON from `/api/status` and `/api/purr`, `POST /api/churus` incrementing the counter with distinct reactions, a meowing 404 for unknown routes, and HTML-escaped narrations (no injection from the model). | 6 |
+| `test/altar.test.ts` | The lair's HTTP contract: served at `/` and `/guarida`, JSON from `/api/status` and `/api/purr`, `POST /api/churus` incrementing the counter with distinct reactions, a meowing 404 for unknown routes, a 413 (not a 500) for bodies over 64 KiB, a live SSE channel that pushes counter jumps, and HTML-escaped narrations (no injection from the model). | 8 |
 | `test/opinion.test.ts` | The deterministic opinion: singular with one GPU, plural with several, singular with one tofu; churus lines that vary instead of repeating back-to-back; the churus counter living in the acta and surviving a re-read. | 5 |
 
 ## 4. Doubles and fixtures

@@ -20,7 +20,7 @@ function num(name: string, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
-export type ModelTask = "diet" | "meow" | "chat" | "digest";
+export type ModelTask = "diet" | "meow" | "chat" | "digest" | "opinion";
 
 export interface GatanasConfig {
   /** Nombre del gato. Se puede rebautizar sin tocar código. */
@@ -55,8 +55,6 @@ export interface GatanasConfig {
   dailyTokenBudget: number;
   /** Y un tope de gasto más honesto: cuidamos los 6.66 USD de la API. */
   dailyBudgetUsd: number;
-  /** Pushover (opcional): user key y app token se configuran en el conector. */
-  pushover: boolean;
   /** Modo demo: acelera el filtro de novedad para que el video sea ensayable. */
   demoMode: boolean;
   /** Timeout de las llamadas al modelo, en ms. */
@@ -82,6 +80,7 @@ export function loadConfig(overrides: Partial<GatanasConfig> = {}): GatanasConfi
       // primero, y el pagado solo como último recurso.
       chat: env("GATANAS_MODEL_CHAT", "google/gemma-4-31b-it:free"),
       digest: env("GATANAS_MODEL_DIGEST", "z-ai/glm-5.3-flash"),
+      opinion: env("GATANAS_MODEL_OPINION", "z-ai/glm-5.3-flash"),
     },
     chatModelFallbacks: env("GATANAS_MODEL_CHAT_FALLBACKS", "z-ai/glm-5.3-flash")
       .split(",")
@@ -100,7 +99,6 @@ export function loadConfig(overrides: Partial<GatanasConfig> = {}): GatanasConfi
     altarCapacity: num("GATANAS_ALTAR_CAPACITY", 200),
     dailyTokenBudget: num("GATANAS_DAILY_TOKEN_BUDGET", 40_000),
     dailyBudgetUsd: num("GATANAS_DAILY_BUDGET_USD", 0.5),
-    pushover: env("GATANAS_PUSHOVER", "0") === "1",
     demoMode,
     modelTimeoutMs: num("GATANAS_MODEL_TIMEOUT_MS", 30_000),
   };

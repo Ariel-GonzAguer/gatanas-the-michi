@@ -16,7 +16,7 @@ import { chooseGift, judgeHeuristic } from "./diet.js";
 import { fallbackNarration, narrateGift } from "./narrate.js";
 import type { Voice } from "./habitat.js";
 import type { Memory } from "./memory.js";
-import { giftLabel, type Gift, type Prey, type PatrolResult } from "./prey.js";
+import { type Gift, type Prey, type PatrolResult } from "./prey.js";
 import type { Wallet } from "./wallet.js";
 
 export interface HuntDeps {
@@ -25,8 +25,6 @@ export interface HuntDeps {
   wallet: Wallet;
   nowIso: () => string;
   collect?: (opts: { host: string; freshSec: number }) => Promise<Prey[]>;
-  /** Empuja el regalo al humano (Pushover, Slack...). Nunca hace fallar la caza. */
-  deliver?: (gift: Gift) => Promise<void>;
   log?: (msg: string) => void;
 }
 
@@ -125,7 +123,8 @@ export class HuntEngine {
         advice = r.advice;
         used = r.tokens;
         tokens += used;
-        wallet.charge(0, used);
+        usd += r.cost;
+        wallet.charge(r.cost, used);
       }
 
       const gift: Gift = {
@@ -143,14 +142,6 @@ export class HuntEngine {
       gifts.push(gift);
       memory.addGift(gift);
       state.giftedKeys[prey.key] = nowIso.slice(0, 10);
-
-      if (this.deps.deliver) {
-        try {
-          await this.deps.deliver(gift);
-        } catch (err) {
-          log(`[deliver] couldn't deliver ${giftLabel(gift.kind)}: ${(err as Error).message}`);
-        }
-      }
     }
 
     memory.recordHunt(gifts.length);
@@ -161,7 +152,7 @@ export class HuntEngine {
     }
     await memory.save();
 
-    log(`[hunt] ${source}: ${preyList.length} prey, ${gifts.length} gifts, ${tokens} tokens`);
+    log(`[hunt] ${source}: ${preyList.length} prey, ${gifts.length} gifts, ${tokens} tokens, ${usd.toFixed(4)} USD`);
     return {
       ran: true,
       gifts,

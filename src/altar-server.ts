@@ -8,6 +8,7 @@
  *   GET  /api/status       estado del gato en JSON
  *   GET  /api/gifts        los regalos de la guarida
  *   GET  /api/lives        vidas y checkpoints
+ *   GET  /api/live         canal SSE: los contadores y la guarida, en vivo
  *   POST /api/chat         hablarle al gato { message }
  *   POST /api/purr         acariciarlo
  *   POST /api/churus       darle un churu
@@ -59,17 +60,28 @@ function json(res: ServerResponse, status: number, body: unknown): void {
 async function readBody(req: IncomingMessage, limit = 64 * 1024): Promise<string> {
   return new Promise((resolve, reject) => {
     let size = 0;
+    let tooBig = false;
     const chunks: Buffer[] = [];
     req.on("data", (c: Buffer) => {
       size += c.length;
       if (size > limit) {
-        reject(new Error("demasiado grande"));
-        req.destroy();
+        // Se deja de retener el cuerpo pero se sigue drenando la conexión,
+        // para poder responder 413 de verdad en vez de cortar el socket.
+        tooBig = true;
+        chunks.length = 0;
         return;
       }
       chunks.push(c);
     });
-    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+    req.on("end", () => {
+      if (tooBig) {
+        const err = new Error("demasiado grande") as Error & { statusCode?: number };
+        err.statusCode = 413;
+        reject(err);
+        return;
+      }
+      resolve(Buffer.concat(chunks).toString("utf8"));
+    });
     req.on("error", reject);
   });
 }
@@ -92,6 +104,79 @@ export function createServer(deps: ServerDeps): Server {
   const churusLimit = limiter(30);
   const huntLimit = limiter(3);
   const lifeLimit = limiter(3);
+
+  // --- El canal vivo (SSE) -------------------------------------------------
+  // Cada visitante de la guarida se suscribe a GET /api/live. Cuando el acta
+  // cambia (mimos, churus, cacerías, vidas, opinión), el servidor empuja el
+  // nuevo estado: quien mira la página ve los números saltar en vivo.
+  const sseClients = new Set<ServerResponse>();
+  type LiveState = {
+    lives: number;
+    purrs: number;
+    churus: number;
+    hunts: number;
+    gpu: number;
+    tofu: number;
+    leaf: number;
+    top: string;
+    op: string;
+    note?: string;
+  };
+  let prev: LiveState | null = null;
+
+  function liveState(): LiveState {
+    const m = deps.memory.state;
+    const living = m.gifts.filter((g) => !g.rejected);
+    return {
+      lives: m.livesRemaining,
+      purrs: m.purrs,
+      churus: m.churus,
+      hunts: m.hunts,
+      gpu: living.filter((g) => g.kind === "gpu").length,
+      tofu: living.filter((g) => g.kind === "tofu").length,
+      leaf: living.filter((g) => g.kind === "leaf").length,
+      top: living[0]?.id ?? "",
+      op: m.opinion?.ts ?? "",
+    };
+  }
+
+  function broadcastLive(note?: string): void {
+    const p = liveState();
+    const changed =
+      !prev ||
+      prev.lives !== p.lives ||
+      prev.purrs !== p.purrs ||
+      prev.churus !== p.churus ||
+      prev.hunts !== p.hunts ||
+      prev.gpu !== p.gpu ||
+      prev.tofu !== p.tofu ||
+      prev.leaf !== p.leaf ||
+      prev.top !== p.top ||
+      prev.op !== p.op;
+    if (!note && !changed) return;
+    if (!note && changed && prev) {
+      // El cambio lo detectó el sondeo: el gato traduce qué pasó.
+      if (p.hunts > prev.hunts) p.note = "a hunt round ended in the dark.";
+      else if (p.top && p.top !== prev.top) p.note = "a gift just landed in the lair.";
+      else if (p.op && p.op !== prev.op) p.note = "the cat has a new opinion of you.";
+    }
+    prev = p;
+    const frame = `data: ${JSON.stringify(p)}\n\n`;
+    for (const client of sseClients) {
+      if (!client.writableEnded && !client.destroyed) client.write(frame);
+    }
+  }
+
+  // Sondeo: caza cambios hechos por el cron o la CLI (no por rutas POST).
+  const livePoll = setInterval(() => broadcastLive(), 5_000);
+  livePoll.unref();
+  // Latido: mantiene abiertas las conexiones tras proxys perezosos.
+  const liveBeat = setInterval(() => {
+    for (const client of sseClients) {
+      if (!client.writableEnded && !client.destroyed) client.write(": ping\n\n");
+    }
+  }, 25_000);
+  liveBeat.unref();
 
   return createHttpServer(async (req, res) => {
     const url = new URL(req.url ?? "/", "http://gatanas.local");
@@ -153,6 +238,24 @@ export function createServer(deps: ServerDeps): Server {
         return;
       }
 
+      if (req.method === "GET" && url.pathname === "/api/live") {
+        res.writeHead(200, {
+          "Content-Type": "text/event-stream; charset=utf-8",
+          "Cache-Control": "no-store",
+          "X-Accel-Buffering": "no",
+          ...SECURITY_HEADERS,
+        });
+        res.write("retry: 4000\n\n");
+        const first = liveState();
+        if (!prev) prev = first;
+        res.write(`data: ${JSON.stringify(first)}\n\n`);
+        sseClients.add(res);
+        req.on("close", () => {
+          sseClients.delete(res);
+        });
+        return;
+      }
+
       if (req.method === "POST" && url.pathname === "/api/chat") {
         if (!chatLimit()) {
           json(res, 429, { reply: "Stop writing me. I'm a cat, not a chatbot. miau." });
@@ -194,6 +297,7 @@ export function createServer(deps: ServerDeps): Server {
               ? "Prrrr. That's the first one. Don't get used to it."
               : `Prrrr. ${n} pets. Still waiting for the churus.`,
         });
+        broadcastLive("someone petted the cat. it allowed it.");
         return;
       }
 
@@ -208,6 +312,7 @@ export function createServer(deps: ServerDeps): Server {
         const n = deps.memory.giveChurus();
         await deps.memory.save();
         json(res, 200, { churus: n, reply: churusReply(n) });
+        broadcastLive("someone just fed the cat a churu.");
         return;
       }
 
@@ -230,6 +335,7 @@ export function createServer(deps: ServerDeps): Server {
                 : (out.reason ?? "The hunt didn't happen."),
           outcome: out,
         });
+        if (out && out.ran) broadcastLive("the cat returns from a hunt. check the lair.");
         return;
       }
 
@@ -251,11 +357,16 @@ export function createServer(deps: ServerDeps): Server {
         }
         const reply = await deps.scheduler.performNahualada(reason.slice(0, 200));
         json(res, 200, { reply, lives: deps.lives.state });
+        broadcastLive("the cat just used one of its nine lives.");
         return;
       }
 
       json(res, 404, { reply: "Nothing here. Not even a box. miau." });
     } catch (err) {
+      if ((err as Error & { statusCode?: number }).statusCode === 413) {
+        json(res, 413, { reply: "That meow is too big. Keep it under 64 KiB. miau." });
+        return;
+      }
       console.error("error in the lair:", err);
       json(res, 500, { reply: "I choked on something. Try again. prrrr." });
     }

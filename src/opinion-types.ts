@@ -10,4 +10,6 @@ export interface Opinion {
   ts: string;
   /** Tokens que costó rumiar (para el presupuesto diario). */
   tokens?: number;
+  /** Gasto real en USD que reportó OpenRouter por rumiar. */
+  cost?: number;
 }

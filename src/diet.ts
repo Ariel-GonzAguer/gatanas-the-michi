@@ -107,10 +107,6 @@ export function judgeHeuristic(input: DietInput): DietVerdict | null {
     return GPU("Empty /tmp (`find /tmp -type f -mtime +1 -delete`).", "A full litter box. The most disgusting and the most valuable thing: I bring it to you with all the disgust.");
   }
 
-  if (prey.category === "certificate") {
-    if (/expires/.test(prey.title)) return TOFU("Renew the certificate now.", "Aged like good tofu: still excellent, but its best-before date is close.");
-  }
-
   return null;
 }
 

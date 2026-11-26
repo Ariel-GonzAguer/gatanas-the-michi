@@ -21,10 +21,10 @@ Trigger: the `Scheduler` every `GATANAS_HUNT_INTERVAL_SEC` (900 s),
         │ else → narrateGift → Voice → gateway → OpenRouter     │
         └────────────┬──────────────────────────────────────────┘
                      │
-        ┌────────────▼──────────┐   ┌───────────────────────┐
-        │ memory.addGift + save │──→│ deliver (optional)    │
-        │ giftedKeys[day]       │   │ the lair always gets  │
-        └───────────────────────┘   └───────────────────────┘
+        ┌────────────▼──────────┐
+        │ memory.addGift + save │
+        │ giftedKeys[day]       │
+        └───────────────────────┘
 ```
 
 Steps:
@@ -41,8 +41,8 @@ Steps:
    (zero tokens). GPUs and tofus are narrated with `Voice.chat("meow", ...)`.
 5. Every gift enters the acta and marks `giftedKeys[prey.key] = today` so
    the same gift isn't repeated on the same day.
-6. `deliver` (Pushover via connector, if configured) can never fail the
-   hunt: its error is logged and the gift still lands in the lair.
+6. Every narrated gift charges the wallet with the real cost OpenRouter
+   reported (`usage.cost`), so the caps see the true spend.
 
 ## 2. Conversation flow
 

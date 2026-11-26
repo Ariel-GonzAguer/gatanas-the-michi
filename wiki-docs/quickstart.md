@@ -9,7 +9,7 @@ persistent record). Node 24 + TypeScript, zero runtime dependencies.
 
 1. `npm install` (only `typescript` and `@types/node` as devDependencies).
 2. `npm run build`.
-3. `npm test` — 36 tests with no network and no real disk.
+3. `npm test` — 43 tests with no network and no real disk.
 4. `GATANAS_HOME=/tmp/gato PORT=8099 GATANAS_HUNT_INTERVAL_SEC=0 npm start`
    — the lair is up at `http://localhost:8099`.
 5. Give the cat a churu:
@@ -57,7 +57,7 @@ persistent record). Node 24 + TypeScript, zero runtime dependencies.
 
 ## Next steps for new devs
 
-1. Read [architecture](architecture/overview.md) to locate the 20 modules.
+1. Read [architecture](architecture/overview.md) to locate the 19 modules.
 2. Run `npm test` and read `test/diet.test.ts`: it pins the core contract.
 3. Look at [data flows](architecture/data-flow.md) before touching
    `hunt.ts` or `chat.ts`.

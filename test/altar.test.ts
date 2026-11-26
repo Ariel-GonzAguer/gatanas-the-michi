@@ -26,7 +26,7 @@ async function boot() {
     kind: "gpu",
     preyKey: "k",
     preyTitle: "disk at 96.0%",
-    narration: "Mae, brought you a GPU. prrrr.",
+    narration: "Brought you a GPU. prrrr.",
     advice: "Clean /tmp.",
     huntNotes: "",
     tokens: 0,
@@ -135,6 +135,45 @@ test("POST /api/churus increments the counter with different reactions", async (
     assert.equal(memory.state.churus, 2);
     const st = (await (await fetch(`${base}/api/status`)).json()) as { churus: number };
     assert.equal(st.churus, 2);
+  } finally {
+    server.close();
+  }
+});
+
+test("a body over 64 KiB gets a 413, not a 500", async () => {
+  const { base, server } = await boot();
+  try {
+    const res = await fetch(`${base}/api/chat`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message: "x".repeat(70 * 1024) }),
+    });
+    assert.equal(res.status, 413);
+  } finally {
+    server.close();
+  }
+});
+
+test("the figures update live over SSE", async () => {
+  const { base, server, memory } = await boot();
+  try {
+    const controller = new AbortController();
+    const res = await fetch(`${base}/api/live`, { signal: controller.signal });
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get("content-type") ?? "", /text\/event-stream/);
+    const reader = res.body!.getReader();
+    // El primer evento trae el estado inicial.
+    const first = new TextDecoder().decode((await reader.read()).value);
+    assert.match(first, /data: \{/);
+    assert.match(first, /"purrs":0/);
+    // Un churu de otra persona debe empujarse solo por el canal.
+    const next = reader.read();
+    await fetch(`${base}/api/churus`, { method: "POST" });
+    const text = new TextDecoder().decode((await next).value ?? new Uint8Array());
+    assert.match(text, /"churus":1/);
+    assert.match(text, /churu/);
+    assert.equal(memory.state.churus, 1);
+    controller.abort();
   } finally {
     server.close();
   }
