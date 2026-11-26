@@ -1,5 +1,5 @@
 /**
- * La dieta de Gatanás, probada sin tocar el disco.
+ * La dieta de Gatanás, probada sin tocar el disco. prrrr.
  *
  * La regla de oro: si esto falla, el gato te trae hojas de árbol cuando hay
  * un incendio, o GPUs cuando el Sprite está perfecto. Ambas son tragedias.

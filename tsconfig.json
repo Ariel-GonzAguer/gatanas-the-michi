@@ -1,4 +1,5 @@
 {
+  // Gatanás compila en serio: ESM estricto, sin peros.
   "compilerOptions": {
     "target": "ES2023",
     "module": "NodeNext",

@@ -1,5 +1,5 @@
 /**
- * El acta de Gatanás.
+ * Gatanás, en pantalla y en memoria. El gato ronronea: prrrr.
  *
  * Todo lo que el gato recuerda vive en un JSON pequeño en su disco
  * persistente. Los Sprites conservan el disco entre sueños, así que el gato

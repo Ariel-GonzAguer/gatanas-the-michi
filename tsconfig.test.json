@@ -1,4 +1,5 @@
 {
+  // La suite hereda la seriedad del gato.
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "dist-test",

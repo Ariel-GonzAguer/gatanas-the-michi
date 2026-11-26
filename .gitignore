@@ -3,4 +3,5 @@ dist/
 dist-test/
 *.local
 .env
+# el acta del gato es suya: no se commitea
 .gatanas/
