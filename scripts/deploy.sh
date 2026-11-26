@@ -17,7 +17,7 @@ echo "→ compilando"
 npm run --silent build
 
 echo "→ empaquetando"
-TARBALL="$(tar czf - dist package.json package-lock.json README.md .env.example .gitignore | base64 -w0)"
+TARBALL="$(tar czf - dist scripts package.json package-lock.json README.md .env.example .gitignore | base64 -w0)"
 
 run() {
   # $1 = comando remoto; los argumentos se codifican para el exec de Sprites
@@ -46,5 +46,8 @@ run "sprite-env services create ${NAME} --cmd node --args dist/main.js --dir ${A
 
 echo "→ lista"
 run "sprite-env services list"
+
+echo "→ comandos del gato a secas en el PATH del Sprite"
+run "bash ${APP_DIR}/scripts/sprite-shims.sh"
 
 echo "✓ Gatanás está en su casa."

@@ -46,7 +46,14 @@ Flujo completo en [auto-publicación](../features/auto-publicacion-github.md).
 El directorio local `/data/workspace/gatanas` es el espejo de edición; la
 fuente de verdad publicada es el árbol de trabajo del Sprite.
 
-## 5. Smoke manual tras un deploy
+## 5. En la terminal del Sprite
+
+`scripts/sprite-shims.sh` (invocado por el deploy) instala los comandos del
+gato a secas en el PATH del Sprite: `gatanas`, `hunt`, `altar`, `lives`,
+`meow`, `revive` (alias `nahualada`). Desde `sprite console` no hace falta
+ni `cd` ni `node dist/cli.js`.
+
+## 6. Smoke manual tras un deploy
 
 1. `GET /api/status` → 200 y `alive: true`.
 2. `POST /api/purr` → contador incrementa.
@@ -56,7 +63,7 @@ fuente de verdad publicada es el árbol de trabajo del Sprite.
 5. `tail /.sprite/logs/services/gatanas.log` dentro del Sprite para
    confirmar el pulso.
 
-## 6. Problemas comunes
+## 7. Problemas comunes
 
 Cualquier comportamiento raro del modelo o del Sprite: la primera parada es
 [troubleshooting](../deployment/troubleshooting.md), que lista los

@@ -92,6 +92,19 @@ sprite-env services create gatanas \
   --http-port 8080
 ```
 
+## En la terminal del Sprite
+
+`scripts/sprite-shims.sh` (lo corre el deploy) deja los comandos del gato a
+secas en el PATH, así que desde `sprite console` podés escribir directamente:
+
+```bash
+hunt              # una ronda de cacería
+altar             # el resumen del acta
+lives             # vidas y checkpoints
+meow "texto"      # hablarle al gato
+revive            # se tira de la mesa y revive
+```
+
 ## Variables de entorno
 
 | Variable | Por defecto | Qué hace |
