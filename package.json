@@ -1,0 +1,27 @@
+{
+  "name": "gatanas-the-michi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Gatanás The Michi — un gato callejero que adoptó tu Sprite de Fly.io y te trae regalos de valor dudoso.",
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.test.json",
+    "start": "node dist/main.js",
+    "dev": "node --experimental-strip-types src/main.ts",
+    "test": "tsc -p tsconfig.test.json && node --test dist-test/test/*.test.js",
+    "hunt": "node dist/cli.js hunt",
+    "altar": "node dist/cli.js altar",
+    "lives": "node dist/cli.js lives",
+    "meow": "node dist/cli.js meow",
+    "revive": "node dist/cli.js revive"
+  },
+  "engines": {
+    "node": ">=22.6"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.10.0"
+  }
+}
