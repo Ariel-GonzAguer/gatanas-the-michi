@@ -53,6 +53,59 @@ gato a secas en el PATH del Sprite: `gatanas`, `hunt`, `altar`, `lives`,
 `meow`, `revive` (alias `nahualada`). Desde `sprite console` no hace falta
 ni `cd` ni `node dist/cli.js`.
 
+### Desde tu máquina: el CLI `sprite`
+
+Fuera del Sprite, el CLI oficial habla con el plano de control:
+
+```bash
+sprite console -s gatanas-the-michi         # shell interactiva dentro del Sprite
+sprite exec -s gatanas-the-michi --no-stdin -- altar   # un comando, imprime y sale
+sprite exec -s gatanas-the-michi --tty -- bash         # TTY desmontable (Ctrl+\ suelta sin matar)
+sprite info -s gatanas-the-michi            # estado, URL, etiquetas
+sprite proxy 8080 -s gatanas-the-michi      # el altar en http://localhost:8080
+```
+
+Un Sprite frío se despierta solo con el primer `exec`, `console` o request
+HTTP; el servicio del gato arranca al despertar, sin intervención.
+
+### El detalle del `--`
+
+Todo lo que va después de `--` es el comando remoto, **en la misma línea**.
+Si el paste parte la línea en dos, bash corre dos cosas: `sprite exec … --`
+(sin comando → `Error: command required`) y después el resto **en tu máquina
+local**. El síntoma típico es un `Permission denied` sobre
+`/tmp/systemd-private-*`, un directorio de systemd que solo existe en la VM
+local. Formas seguras:
+
+```bash
+# una sola línea:
+sprite exec -s gatanas-the-michi --no-stdin -- find /tmp -type f -mtime +1 -print -delete
+
+# continuación explícita (el \ pegado al final de la línea):
+sprite exec -s gatanas-the-michi --no-stdin -- \
+  find /tmp -type f -mtime +1 -print -delete
+
+# comando remoto complejo (pipes, &&): envuelto en bash -c
+sprite exec -s gatanas-the-michi --no-stdin -- bash -c 'altar && meow "prrrr"'
+```
+
+Regla práctica: el prompt delata dónde corrés — `arieg@instabox-…` es tu
+máquina; `sprite@gatanas-the-michi` es el Sprite.
+
+### Receta verificada: limpiar `/tmp` del Sprite
+
+```bash
+find /tmp -type f -mtime +1 -print -delete
+```
+
+Es seguro en este Sprite: `-type f` no toca directorios ni symlinks, corre
+como el usuario `sprite` (lo de root da Permission denied y sigue), el acta
+vive en `~/.gatanas` y el código en `~/gatanas-the-michi` — nada valioso en
+`/tmp` — y el `node-compile-cache` de Node se regenera solo. Dos matices:
+`-mtime +1` borra lo que tiene **2 días o más** (para "más de 24 h" exacto,
+`-mmin +1440`), y conviene correr primero la versión sin `-delete` para ver
+qué tocaría.
+
 ## 6. Smoke manual tras un deploy
 
 1. `GET /api/status` → 200 y `alive: true`.
@@ -74,4 +127,5 @@ incidentes reales conocidos con causa y solución.
 - [Testing](testing.md)
 - [Deployment en Sprites](../deployment/platform.md)
 - [Auto-publicación](../features/auto-publicacion-github.md)
+- CLI de Sprites: `sprite --help` (console, exec, proxy, info)
 - Scripts reales: `package.json`, `scripts/deploy.sh`

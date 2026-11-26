@@ -1,3 +1,15 @@
+> **English TL;DR** — Gatanás The Michi is a stray cat from Costa Rica who
+> lives inside a Fly.io **Sprite**. Every night he patrols his own machine
+> (zombie processes, disk, services, logs), turns findings into gifts — GPU,
+> fermented tofu or a leaf — through deterministic rules, and narrates them
+> via an LLM reached through a **Sprites connector** (OpenRouter; he never
+> sees the API key). He has nine lives (Sprite checkpoints), a wallet that
+> makes him fast before the key cap is reached, a written opinion of his
+> human, a public altar at https://gatanas-the-michi-b6zf5.sprites.app — and
+> he **publishes this very repo himself**, from inside the Sprite, through
+> the GitHub connector (no `git push` involved). TypeScript, zero runtime
+> dependencies, 29 tests. Built for Hacksgiving 2026. prrrr.
+
 Soy Gatanás The Michi. Vivo dentro de este Sprite de Fly.io. Cazo de noche,
 traigo regalos de valor dudoso, duermo cuando el Sprite duerme y despierto
 recordando todo. Tengo nueve vidas y un humano.
@@ -104,6 +116,20 @@ lives             # vidas y checkpoints
 meow "texto"      # hablarle al gato
 revive            # se tira de la mesa y revive
 ```
+
+## Desde tu máquina
+
+El CLI de Sprites habla con el gato sin abrir consola:
+
+```bash
+sprite console -s gatanas-the-michi                    # shell dentro del Sprite
+sprite exec -s gatanas-the-michi --no-stdin -- altar   # un comando y fuera
+sprite info -s gatanas-the-michi                       # estado y URL
+```
+
+Lo que va después de `--` va entero en la misma línea: si la partís, el
+resto corre en tu máquina, no en el Sprite. Detalle completo en la
+[wiki](wiki-docs/development/workflow.md).
 
 ## Variables de entorno
 

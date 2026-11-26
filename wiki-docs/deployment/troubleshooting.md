@@ -163,3 +163,29 @@ afecta generaciones futuras.
 **Verificación**: `GET /api/gifts` no contiene la palabra vieja.
 
 **Referencias**: `src/narrate.ts` (`PERSONA`), `src/memory.ts`.
+
+---
+
+### `sprite exec` dice "command required" y el comando corre en tu máquina
+
+**Síntoma**: pegar la invocación en dos líneas — `sprite exec -s <sprite>
+--no-stdin --` arriba y el comando abajo — produce `Error: command required`
+y después el comando se ejecuta **localmente**, con errores que no tienen
+sentido dentro del Sprite (p. ej. `find: '/tmp/systemd-private-…':
+Permission denied`, un directorio de systemd que solo existe en la máquina
+desde la que se llama).
+
+**Causa**: el salto de línea parte la invocación en dos comandos bash
+independientes. El primero queda sin comando remoto; el segundo corre en la
+máquina local, no en el Sprite.
+
+**Solución**:
+1. Todo en una sola línea, o cerrar la línea con `\` de continuación.
+2. Comandos remotos con pipes o `&&`: envolverlos en
+   `bash -c 'comando completo'`.
+
+**Verificación**: `sprite exec -s <sprite> --no-stdin -- hostname` devuelve
+el nombre del Sprite. Regla del prompt: `sprite@<sprite>` = dentro;
+cualquier otro usuario = tu máquina.
+
+**Referencias**: CLI `sprite exec --help`; [workflow §5](../development/workflow.md).
