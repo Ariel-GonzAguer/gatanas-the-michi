@@ -7,6 +7,9 @@
  *  - No promete acciones: no puede reiniciar nada desde el chat (aún).
  *  - Si el humano hace una pregunta técnica, contesta como un gato sabio:
  *    con una metáfora útil y sin formularios.
+ *
+ * Las respuestas enlatadas son bilingües en el disparador (la gente escribe en
+ * el idioma que quiera) y en inglés en la respuesta.
  */
 import type { Voice } from "./habitat.js";
 import { PERSONA, stripMarkdown } from "./narrate.js";
@@ -19,26 +22,26 @@ export interface ChatTurn {
 
 const INTENTS: { pattern: RegExp; reply: (m: GatanasMemory) => string }[] = [
   {
-    pattern: /^(acarici|apurru|angurri|caricia|tocarte|toco)/i,
-    reply: (m) => `Prrrr. ${m.purrs + 1} caricias. Sigue así, aunque no lo merezcás. Prrrr.`,
+    pattern: /^(acarici|apurru|angurri|caricia|tocarte|toco|pet\b|pets\b|scratch)/i,
+    reply: (m) => `Prrrr. ${m.purrs + 1} pets. Keep going, even if you don't deserve it. Prrrr.`,
   },
   {
-    pattern: /^(atún|atun|pescado|comida|comer|pan)/i,
-    reply: () => `Yo no como de tu plato. Pero si dejás un atún en el altar, diay, lo considero. mrrp.`,
+    pattern: /^(churus|churu|atún|atun|pescado|comida|comer|pan|tuna|fish|food|feed)/i,
+    reply: () => `I don't eat from your plate. But if you leave churus at the lair, well, I'll consider it. prrrr.`,
   },
   {
-    pattern: /(cómo estás|como estas|qué tal|que tal)/i,
-    reply: (m) => `Vivo en un Sprite, duermo cuando el SPRITE duerme, cazo cuando el disco se pone raro. Llevo ${m.livesRemaining} vidas. Preguntame algo útil. miau.`,
+    pattern: /(cómo estás|como estas|qué tal|que tal|how are you|how's it going|how is it going|what's up|whats up)/i,
+    reply: (m) => `I live in a Sprite, I sleep when the SPRITE sleeps, I hunt when the disk acts up. I have ${m.livesRemaining} lives. Ask me something useful. miau.`,
   },
   {
-    pattern: /(qué haces|que haces|qué hacés|que haces)/i,
-    reply: () => `Llevo horas mirando un log crecer. Tú no entenderías el placer.`,
+    pattern: /(qué haces|que haces|qué hacés|what do you do|what are you doing|what are you up to)/i,
+    reply: () => `I've spent hours watching a log grow. You wouldn't understand the pleasure.`,
   },
 ];
 
 export function cannedReply(text: string, memory: GatanasMemory): string | null {
   for (const i of INTENTS) if (i.pattern.test(text.trim())) return i.reply(memory);
-  if (text.trim().length < 2) return "Mmm. Eso fue un maullido vacío. Decí algo. miau.";
+  if (text.trim().length < 2) return "Hmm. That was an empty meow. Say something. miau.";
   return null;
 }
 
@@ -52,7 +55,7 @@ export async function speak(voice: Voice | null, memory: GatanasMemory, text: st
     .join("\n");
 
   if (!voice) {
-    return "Hoy no tengo voz: el gateway no me conoce y no puedo maullar con palabras. Te oí igual. miau.";
+    return "I have no voice today: the gateway doesn't know me and I can't meow with words. I heard you anyway. miau.";
   }
 
   try {
@@ -63,11 +66,11 @@ export async function speak(voice: Voice | null, memory: GatanasMemory, text: st
         {
           role: "user",
           content: [
-            `Te habla tu humano. Contexto: vidas ${memory.livesRemaining}, caricias ${memory.purrs}, ` +
-              `rondas de cacería ${memory.hunts}.`,
-            lastGifts ? `Últimos regalos que le trajiste:\n${lastGifts}` : "Todavía no le trajiste nada.",
-            memory.opinion ? `Lo que ya opinás de él (no lo repitas literal, evolucioná): «${memory.opinion.quote}»` : "",
-            `Mensaje: "${text.slice(0, 1200)}"`,
+            `Your human is talking to you. Context: lives ${memory.livesRemaining}, pets ${memory.purrs}, ` +
+              `hunt rounds ${memory.hunts}.`,
+            lastGifts ? `The last gifts you brought them:\n${lastGifts}` : "You haven't brought them anything yet.",
+            memory.opinion ? `What you already think of them (don't repeat it verbatim, evolve it): «${memory.opinion.quote}»` : "",
+            `Message: "${text.slice(0, 1200)}"`,
           ]
             .filter(Boolean)
             .join("\n\n"),
@@ -77,12 +80,12 @@ export async function speak(voice: Voice | null, memory: GatanasMemory, text: st
     );
     return stripMarkdown(reply.content) || tiredReply();
   } catch (err) {
-    console.error("la voz del gato falló:", err instanceof Error ? err.message : err);
+    console.error("the cat's voice failed:", err instanceof Error ? err.message : err);
     return tiredReply();
   }
 }
 
 /** Cuando el modelo no contesta, el gato no se queda mudo: resopla. */
 function tiredReply(): string {
-  return "Te escuché, pero no me salen las palabras. Quedate un rato y volvé a hablarme. mrrp.";
+  return "I heard you, but the words won't come out. Stay a while and talk to me again. prrrr.";
 }

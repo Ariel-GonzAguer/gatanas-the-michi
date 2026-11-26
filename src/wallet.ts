@@ -6,7 +6,7 @@
  * gasto real que reporta OpenRouter en cada respuesta y se frena solo cuando
  * el total se acerca al límite de la llave.
  *
- * Un gato que gasta más de lo que su humano le dio no merece atún.
+ * Un gato que gasta más de lo que su humano le dio no merece churus.
  */
 import type { GatanasConfig } from "./config.js";
 import type { Memory } from "./memory.js";
@@ -55,12 +55,12 @@ export class Wallet {
   /** ¿Puede gastar ahora? Devuelve el motivo cuando no. */
   canSpend(): { ok: boolean; reason?: string } {
     if (this.spentToday >= this.cfg.dailyBudgetUsd) {
-      return { ok: false, reason: `presupuesto de hoy agotado (${this.spentToday.toFixed(3)} USD)` };
+      return { ok: false, reason: `today's budget is spent (${this.spentToday.toFixed(3)} USD)` };
     }
     if (this.spentTotal >= this.capUsd - Wallet.RESERVE_USD) {
       return {
         ok: false,
-        reason: `la llave está casi en su tope (${this.spentTotal.toFixed(2)} de ${this.capUsd} USD). El gato ayuna.`,
+        reason: `the key is near its cap (${this.spentTotal.toFixed(2)} of ${this.capUsd} USD). The cat fasts.`,
       };
     }
     return { ok: true };
@@ -75,8 +75,8 @@ export class Wallet {
   /** Narrativa del monedero para el altar. */
   static mood(s: WalletState): string {
     const left = s.capUsd - s.spentUsd;
-    if (left < 1) return "Gatanás come poco: la llave de OpenRouter está por acabarse.";
-    if (left < 3) return "Gatanás come moderado: queda presupuesto de caza.";
-    return "Gatanás come bien: hay presupuesto para noches largas.";
+    if (left < 1) return "Gatanás eats little: the OpenRouter key is running out.";
+    if (left < 3) return "Gatanás eats moderately: there's budget left for hunting.";
+    return "Gatanás eats well: there's budget for long nights.";
   }
 }

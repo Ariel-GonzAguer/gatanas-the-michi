@@ -39,6 +39,8 @@ export interface GatanasConfig {
   openrouterConnection: string;
   /** Modelos por tarea: barato para cazar, un poco mejor para charlar. */
   models: Record<ModelTask, string>;
+  /** Cadena de reserva para el chat: free primero, pagado al final. */
+  chatModelFallbacks: string[];
   /** Frecuencia de las rondas de cacería, en segundos. 0 desactiva. */
   huntIntervalSec: number;
   /** Hosts que el gato vigila (además de los seriales del host). */
@@ -76,9 +78,15 @@ export function loadConfig(overrides: Partial<GatanasConfig> = {}): GatanasConfi
     models: {
       diet: env("GATANAS_MODEL_DIET", "z-ai/glm-5.3-flash"),
       meow: env("GATANAS_MODEL_MEOW", "z-ai/glm-5.3-flash"),
-      chat: env("GATANAS_MODEL_CHAT", "z-ai/glm-5.3-flash"),
+      // El chat es gratis cuando puede serlo: modelos `:free` de OpenRouter
+      // primero, y el pagado solo como último recurso.
+      chat: env("GATANAS_MODEL_CHAT", "google/gemma-4-31b-it:free"),
       digest: env("GATANAS_MODEL_DIGEST", "z-ai/glm-5.3-flash"),
     },
+    chatModelFallbacks: env("GATANAS_MODEL_CHAT_FALLBACKS", "z-ai/glm-5.3-flash")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
     huntIntervalSec: num("GATANAS_HUNT_INTERVAL_SEC", 900),
     watchHosts: env("GATANAS_WATCH_HOSTS", "gatanas-the-michi localhost 127.0.0.1")
       .split(",")

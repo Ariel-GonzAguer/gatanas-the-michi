@@ -3,7 +3,7 @@
  *
  * Cada noche, si el Sprite duerme con presupuesto de tokens disponible, el
  * gato rumia: mira los regalos de la semana, las caricias, las vidas gastadas,
- * y deja una confesión guardada. Es lo primero que se ve en el altar.
+ * y deja una confesión guardada. Es lo primero que se ve en la guarida.
  *
  * Si nunca ha visto nada, no escribe nada. Un gato que no te conoce no opina
  * de vos: te ignora, que es peor.
@@ -13,7 +13,7 @@ import { PERSONA, stripMarkdown } from "./narrate.js";
 import type { Opinion } from "./opinion-types.js";
 import type { GatanasMemory } from "./memory.js";
 
-export const CONFESSION_PREFIX = "Mi opinión sobre mi humano:";
+export const CONFESSION_PREFIX = "My opinion of my human:";
 
 export interface RuminationInput {
   memory: GatanasMemory;
@@ -59,13 +59,13 @@ export async function ruminate(voice: Voice | null, input: RuminationInput): Pro
         {
           role: "user",
           content: [
-            "Momentos de rumia. Mira tu propia cacería y formá una opinión sobre tu humano.",
-            `Regalos que trajiste: ${Object.entries(kinds).map(([k, n]) => `${n} ${k}`).join(", ") || "ninguno"}.`,
-            `Vidas restantes: ${input.memory.livesRemaining}. Caricias: ${input.memory.purrs}. Hechicero humano lleva ${input.purrDrought} días sin tocarte.`,
-            `Títulos que le diste: ${input.memory.humanTitles.slice(0, 7).join(", ") || "ninguno"}.`,
-            `Escribe exactamente al formato: "${CONFESSION_PREFIX} [una sola oración compuesta de 20 a 45 palabras, tu opinión sincera y pasivo-agresiva sobre este humano en particular]".`,
-            `Si su humano es un desastre, decilo con elegancia. Si es un buen humano, admitilo a regañadientes.`,
-            `Datos de cacería:\n${summary || "nada"}`,
+            "Rumination moment. Look at your own hunt and form an opinion of your human.",
+            `Gifts you brought: ${Object.entries(kinds).map(([k, n]) => `${n} ${k}`).join(", ") || "none"}.`,
+            `Lives left: ${input.memory.livesRemaining}. Pets: ${input.memory.purrs}. Your human has gone ${input.purrDrought} days without touching you.`,
+            `Titles you gave them: ${input.memory.humanTitles.slice(0, 7).join(", ") || "none"}.`,
+            `Write exactly this format: "${CONFESSION_PREFIX} [a single compound sentence of 20 to 45 words, your sincere and passive-aggressive opinion of this particular human]".`,
+            `If your human is a mess, say it with elegance. If they're a good human, admit it grudgingly.`,
+            `Hunt data:\n${summary || "nothing"}`,
           ].join("\n"),
         },
       ],
@@ -75,37 +75,25 @@ export async function ruminate(voice: Voice | null, input: RuminationInput): Pro
     const quote = line.startsWith(CONFESSION_PREFIX)
       ? line
       : `${CONFESSION_PREFIX} ${line}`;
-    if (quote.length < CONFESSION_PREFIX.length + 10) throw new Error("rumia vacía");
+    if (quote.length < CONFESSION_PREFIX.length + 10) throw new Error("empty rumination");
     return { quote, ts: input.nowIso, tokens: reply.tokens };
   } catch {
     return fallback;
   }
 }
 
-/** Versión determinista: la usa el altar cuando el gato está sin voz. */
+/** Versión determinista: la usa la guarida cuando el gato está sin voz. */
 export function fallbackOpinion(input: RuminationInput): string {
   const m = input.memory;
   const gpus = m.gifts.filter((g) => g.kind === "gpu").length;
   const tofu = m.gifts.filter((g) => g.kind === "tofu").length;
-  if (m.purrs === 0) return `${CONFESSION_PREFIX} Este humano recibe mis regalos y no acaricia. Así no se cría a un gato.`;
-  if (tofu > gpus) return `${CONFESSION_PREFIX} Le traje ${tofu} tofus fermentados. Sigue igual. Un humano que no se pudre con su propio hogar es un humano raro.`;
-  if (gpus > 0) return `${CONFESSION_PREFIX} Le traje ${gpus} cosas valiosas. Lo hace bien, aunque no me dé atún por eso.`;
-  return `${CONFESSION_PREFIX} Vive en una casa demasiado limpia. Me aburre, pero lo adopto.`;
+  if (m.purrs === 0) return `${CONFESSION_PREFIX} This human receives my gifts and never pets me. That's no way to raise a cat.`;
+  if (tofu > gpus) {
+    return `${CONFESSION_PREFIX} I brought them ${tofu === 1 ? "1 fermented tofu" : `${tofu} fermented tofus`}. They stay the same. A human whose home never changes is a strange human.`;
+  }
+  if (gpus > 0) {
+    const valioso = gpus === 1 ? "1 valuable thing" : `${gpus} valuable things`;
+    return `${CONFESSION_PREFIX} I brought them ${valioso}. They do fine, even if they don't give me churus for it.`;
+  }
+  return `${CONFESSION_PREFIX} They live in a house that's too clean. It bores me, but I adopt them anyway.`;
 }
-
-/** Título honorífico basado en cómo trata al gato. */
-export function titleFor(m: GatanasMemory, purrDrought: number): string {
-  if (m.purrs === 0) return "el que nunca acaricia";
-  const gpus = m.gifts.filter((g) => g.kind === "gpu").length;
-  const tofu = m.gifts.filter((g) => g.kind === "tofu").length;
-  if (purrDrought > 3) return "el distraído pero querible";
-  if (tofu >= 3 && gpus <= 1) return "el que arregla todo mañana";
-  if (gpus >= 3) return "el que escucha al gato";
-  if (m.purrs >= 20) return "el buen humano";
-  return "el que intenta";
-}
-
-export const TREAT_PUZZLE = (purrDrought: number): string =>
-  purrDrought >= 3
-    ? "Gatanás te mira desde el altar. No desvía la mirada. Significa: llevas días sin acariciar."
-    : "Gatanás te deja pasar. Es un honor menor, pero es un honor.";

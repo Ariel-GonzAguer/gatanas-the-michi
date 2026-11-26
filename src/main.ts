@@ -27,9 +27,9 @@ async function main(): Promise<void> {
 
   const memory = new Memory(path.join(cfg.home, "memory.json"), cfg.name, cfg.altarCapacity, cfg.lives);
   await memory.load();
-  log(`acta en ${memory.path} · ${memory.state.gifts.length} regalos · ${memory.state.livesRemaining} vidas`);
+  log(`acta at ${memory.path} · ${memory.state.gifts.length} gifts · ${memory.state.livesRemaining} lives`);
 
-  const voice = new Voice(cfg.gatewayBase, cfg.openrouterConnection, cfg.models, cfg.modelTimeoutMs);
+  const voice = new Voice(cfg.gatewayBase, cfg.openrouterConnection, cfg.models, cfg.modelTimeoutMs, cfg.chatModelFallbacks);
   const api = new SpritesApi(cfg.spriteBaseUrl, token, cfg.spriteName);
   const wallet = new Wallet(cfg, memory);
   const lives = new NineLives(cfg, memory, api);
@@ -37,8 +37,8 @@ async function main(): Promise<void> {
   const reachable = await voice.reachable();
   log(
     reachable
-      ? "el gateway me reconoce: tengo voz."
-      : "el gateway no me reconoce: cazo en silencio hasta que me preste atención.",
+      ? "the gateway recognizes me: I have a voice."
+      : "the gateway doesn't recognize me: I hunt in silence until it pays attention.",
   );
 
   const hunt = new HuntEngine(cfg, {
@@ -71,11 +71,11 @@ async function main(): Promise<void> {
   });
 
   await new Promise<void>((resolve) => server.listen(cfg.port, "0.0.0.0", resolve));
-  log(`el altar está servido en 0.0.0.0:${cfg.port}`);
+  log(`the lair is served on 0.0.0.0:${cfg.port}`);
   await scheduler.start();
 
   const shutdown = async (why: string) => {
-    log(`bajando: ${why}. Gatanás guarda el acta y se acuesta.`);
+    log(`shutting down: ${why}. Gatanás saves the acta and goes to bed.`);
     scheduler.stop();
     await memory.save();
     server.close(() => process.exit(0));
@@ -86,6 +86,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error("Gatanás no pudo nacer:", err);
+  console.error("Gatanás couldn't be born:", err);
   process.exit(1);
 });

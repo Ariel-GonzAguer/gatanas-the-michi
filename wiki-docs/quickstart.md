@@ -1,62 +1,65 @@
-# Quickstart — mapa de la wiki
+# Quickstart — map of the wiki
 
-Gatanás The Michi: agente personal felino que vive dentro de un Sprite de
-Fly.io, caza problemas de su propia máquina, los narra con un LLM por el
-gateway de conectores y guarda todo en su acta. Node 24 + TypeScript, cero
-dependencias de runtime.
+Gatanás The Michi: a feline personal agent that lives inside a Fly.io
+Sprite, hunts for problems on its own machine, narrates them with an LLM
+through the connector gateway, and stores everything in its acta (its
+persistent record). Node 24 + TypeScript, zero runtime dependencies.
 
-## Inicio rápido (local)
+## Quick start (local)
 
-1. `npm install` (solo `typescript` y `@types/node` como devDependencies).
+1. `npm install` (only `typescript` and `@types/node` as devDependencies).
 2. `npm run build`.
-3. `npm test` — 29 pruebas sin red ni disco real.
+3. `npm test` — 36 tests with no network and no real disk.
 4. `GATANAS_HOME=/tmp/gato PORT=8099 GATANAS_HUNT_INTERVAL_SEC=0 npm start`
-   — el altar queda en `http://localhost:8099`.
-5. Para operar el real: `SPRITES_TOKEN=… bash scripts/deploy.sh`
-   (ver [deployment](deployment/platform.md)).
+   — the lair is up at `http://localhost:8099`.
+5. Give the cat a churu:
+   `curl -X POST http://localhost:8099/api/churus` (the deterministic
+   `churusReply()` answers).
+6. To operate the real one: `SPRITES_TOKEN=… bash scripts/deploy.sh`
+   (see [deployment](deployment/platform.md)).
 
-## Stack resumido
+## Stack at a glance
 
-| Capa | Tecnología |
+| Layer | Technology |
 |------|------------|
-| Lenguaje | TypeScript 5.6 → ESM (`tsc`, sin bundler) |
-| Runtime | Node 24 (>= 22.6 por `--experimental-strip-types`) |
-| Servidor | `node:http` estándar, HTML/CSS/JS inline |
+| Language | TypeScript 5.6 → ESM (`tsc`, no bundler) |
+| Runtime | Node 24 (>= 22.6 for `--experimental-strip-types`) |
+| Server | Stock `node:http`, inline HTML/CSS/JS |
 | Tests | `node --test` + `node:assert/strict` |
-| Plataforma | Fly.io Sprites (servicio gestionado por `sprite-env`) |
-| LLM | OpenRouter vía gateway de conectores (chat: modelos `:free` con reserva pagada) |
-| Persistencia | `memory.json` en el disco persistente del Sprite |
+| Platform | Fly.io Sprites (service managed by `sprite-env`) |
+| LLM | OpenRouter via the connector gateway (chat: `:free` models with a paid fallback) |
+| Persistence | `memory.json` on the Sprite's persistent disk |
 
-## Mapa de la wiki
+## Map of the wiki
 
-### Arquitectura
-- [Visión general](architecture/overview.md) — capas, inventario completo de módulos, decisiones.
-- [HTTP API](architecture/routing.md) — rutas del altar, errores, limitadores, cabeceras.
-- [Flujos de datos](architecture/data-flow.md) — cacería, conversación, rumiación.
+### Architecture
+- [Overview](architecture/overview.md) — layers, full module inventory, decisions.
+- [HTTP API](architecture/routing.md) — the lair's routes, errors, rate limiters, headers.
+- [Data flows](architecture/data-flow.md) — hunt, conversation, rumination.
 
-### Funcionalidades destacadas
-- [Caza y dieta](features/caza-y-dieta.md) — heurística GPU/hoja/tofu con umbrales exactos.
-- [Nueve vidas](features/nueve-vidas.md) — checkpoints del Sprite como vidas; el acta sobrevive al rebobinado.
-- [Monedero](features/monedero.md) — presupuesto contra el tope de la llave; el gato ayuna.
-- [Altar y chat](features/altar-y-chat.md) — la página pública y la cadena de modelos del chat.
-- [Auto-publicación del repo](features/auto-publicacion-github.md) — commits por la API de GitHub vía conector OAuth.
+### Highlighted features
+- [Hunt and diet](features/caza-y-dieta.md) — GPU/leaf/tofu heuristic with exact thresholds.
+- [Nine lives](features/nueve-vidas.md) — Sprite checkpoints as lives; the acta survives rewinding.
+- [Wallet](features/monedero.md) — budget against the key's cap; the cat fasts.
+- [The lair and chat](features/altar-y-chat.md) — the public page and the chat's model chain.
+- [Repo self-publishing](features/auto-publicacion-github.md) — commits through the GitHub API via the OAuth connector.
 
-### Seguridad
-- [Implementación](security/implementation.md) — perímetro HTTP, escaping, custodia BYOK, límites del modelo.
+### Security
+- [Implementation](security/implementation.md) — HTTP perimeter, escaping, BYOK custody, model limits.
 
-### Despliegue y operación
-- [Plataforma](deployment/platform.md) — el Sprite, el servicio, el deploy, la persistencia.
-- [Troubleshooting](deployment/troubleshooting.md) — incidentes reales con causa y solución.
+### Deployment and operation
+- [Platform](deployment/platform.md) — the Sprite, the service, the deploy, persistence.
+- [Troubleshooting](deployment/troubleshooting.md) — real incidents with cause and solution.
 
-### Desarrollo
-- [Testing](development/testing.md) — suite, dobles, convenciones.
-- [Workflow](development/workflow.md) — scripts, compilación, smoke tras deploy.
+### Development
+- [Testing](development/testing.md) — suite, doubles, conventions.
+- [Workflow](development/workflow.md) — scripts, compilation, post-deploy smoke.
 
-## Próximos pasos para devs nuevos
+## Next steps for new devs
 
-1. Leer [arquitectura](architecture/overview.md) para ubicar los 22 módulos.
-2. Correr `npm test` y leer `test/diet.test.ts`: fija el contrato central.
-3. Mirar [flujos de datos](architecture/data-flow.md) antes de tocar
-   `hunt.ts` o `chat.ts`.
-4. Para operar en el Sprite real, [deployment](deployment/platform.md) y
-   [troubleshooting](deployment/troubleshooting.md) son obligatorios.
+1. Read [architecture](architecture/overview.md) to locate the 20 modules.
+2. Run `npm test` and read `test/diet.test.ts`: it pins the core contract.
+3. Look at [data flows](architecture/data-flow.md) before touching
+   `hunt.ts` or `chat.ts`.
+4. To operate on the real Sprite, [deployment](deployment/platform.md) and
+   [troubleshooting](deployment/troubleshooting.md) are mandatory.

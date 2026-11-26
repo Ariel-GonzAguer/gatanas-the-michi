@@ -1,59 +1,61 @@
 # Testing
 
-Suite con `node --test` (test runner de la librería estándar) sobre la
-compilación de tests. Sin dependencias de testing: ni vitest, ni jest.
+The suite runs on `node --test` (the standard library's test runner) over
+the compiled test build. No testing dependencies: no vitest, no jest.
 
-## 1. Resumen
+## 1. Summary
 
-29 pruebas en 4 archivos, todas sin red y sin disco real: cada módulo con
-comportamiento recibe sus colaboradores por inyección y los tests usan
-dobles. `npm test` compila y corre todo.
+36 tests in 6 files, all with no network and no real disk: every module
+with behavior receives its collaborators by injection and the tests use
+doubles. `npm test` compiles and runs everything.
 
-## 2. Comando y configuración
+## 2. Command and configuration
 
 ```bash
 npm test   # tsc -p tsconfig.test.json && node --test dist-test/test/*.test.js
 ```
 
-`tsconfig.test.json` compila `src/` + `test/` a `dist-test/` con `rootDir`
-en la raíz del proyecto; los tests importan desde `../src/*.js`.
+`tsconfig.test.json` compiles `src/` + `test/` to `dist-test/` with
+`rootDir` at the project root; the tests import from `../src/*.js`.
 
-## 3. Archivos y cobertura
+## 3. Files and coverage
 
-| Archivo | Qué fija | Pruebas |
+| File | What it pins down | Tests |
 |---------|----------|---------|
-| `test/diet.test.ts` | El contrato de la heurística: umbrales exactos de disco (92/80), errores (8/3), zombis (3 avistamientos), tofus rechazados que degradan a hoja, GPU sin vidas que baja a tofu. | 14 |
-| `test/collect.test.ts` | Qué es presa y qué no: disco medido con `statfs` inyectable, zombis vs procesos normales, logs frescos vs viejos. | 4 |
-| `test/hunt.test.ts` | El motor completo con voz postiza: no repite hallazgo el mismo día, hojas sin tokens, monedero vacío que frena, entrega fallida que no rompe la caza, gasto acumulado en el acta. | 5 |
-| `test/lives.test.ts` | El pacto de las vidas: nace con 9, perder cuesta 1, gastar restaura el checkpoint, la vida se devuelve si la restauración falla, sin llave no hay restauración, renacer no borra regalos. | 6 |
+| `test/diet.test.ts` | The heuristic contract: exact disk thresholds (95% is a GPU with high confidence, 85% is tofu if it's been two nights / leaf on the first, 40% doesn't even make a leaf), errors (8 GPU / 3 tofu), zombies (3 sightings), the full sandbox that's always a GPU, a stopped service, unknown categories that leave the cat doubting, rejected tofus that degrade to leaf, and a GPU with no lives that drops to tofu. | 10 |
+| `test/collect.test.ts` | What is prey and what isn't: disk measured with injectable `statfs`, zombies vs normal processes, fresh vs old logs. | 4 |
+| `test/hunt.test.ts` | The full engine with a fake voice: no repeating a find on the same day, leaves without tokens, an empty wallet that puts the brakes on, a failed delivery that doesn't break the hunt, accumulated spend in the acta. | 5 |
+| `test/lives.test.ts` | The pact of the lives: born with 9, losing costs 1, spending restores the checkpoint, the life is given back if the restore fails, without the key there is no restore, rebirth doesn't erase gifts. | 6 |
+| `test/altar.test.ts` | The lair's HTTP contract: served at `/` and `/guarida`, JSON from `/api/status` and `/api/purr`, `POST /api/churus` incrementing the counter with distinct reactions, a meowing 404 for unknown routes, and HTML-escaped narrations (no injection from the model). | 6 |
+| `test/opinion.test.ts` | The deterministic opinion: singular with one GPU, plural with several, singular with one tofu; churus lines that vary instead of repeating back-to-back; the churus counter living in the acta and surviving a re-read. | 5 |
 
-## 4. Dobles y fixtures
+## 4. Doubles and fixtures
 
-| Doble | Ubicación | Uso |
+| Double | Location | Use |
 |-------|-----------|-----|
-| `fixtureCollector(preyList)` | `src/hunt.ts` | Colector de presas fijo para el motor. |
-| `fakeSpritesApi({fail})` | `src/lives.ts` | Plano de control falso con checkpoints en memoria. |
-| `FakeVoice` | `test/hunt.test.ts` | Voz que registra llamadas y responde fijo. |
-| `deps.statfs` inyectable | `src/collect.ts` | Medidor de disco reemplazable (`CollectDeps.statfs`). |
-| `GATANAS_TEST_STATFS` | `src/collect.ts` | Alternativa por variable de entorno. |
+| `fixtureCollector(preyList)` | `src/hunt.ts` | Fixed prey collector for the engine. |
+| `fakeSpritesApi({fail})` | `src/lives.ts` | Fake control plane with in-memory checkpoints. |
+| `FakeVoice` | `test/hunt.test.ts` | Voice that records calls and answers with a fixed reply. |
+| Injectable `deps.statfs` | `src/collect.ts` | Replaceable disk meter (`CollectDeps.statfs`). |
+| `GATANAS_TEST_STATFS` | `src/collect.ts` | Environment-variable alternative. |
 
-## 5. Convenciones
+## 5. Conventions
 
-- Asserts con `node:assert/strict`; `assert.deepEqual` para contratos de
-  forma (kinds de regalos) y `assert.match` para textos.
-- Fechas congeladas (`nowIso` fijo) en los tests del motor para que
-  `giftedKeys` y ventanas de frescura sean deterministas.
-- Directorios temporales por test (`fs.mkdtemp`) para el acta: nunca se
-  toca el `GATANAS_HOME` real.
+- Asserts with `node:assert/strict`; `assert.deepEqual` for shape
+  contracts (gift kinds) and `assert.match` for texts.
+- Frozen dates (a fixed `nowIso`) in the engine tests so `giftedKeys` and
+  freshness windows are deterministic.
+- Per-test temporary directories (`fs.mkdtemp`) for the acta: the real
+  `GATANAS_HOME` is never touched.
 
-## 6. Sin tests configurados (integración)
+## 6. No configured tests (integration)
 
-La integración real (gateway de Sprites, plano de control, OpenRouter) no
-tiene suite automatizada: se valida con el smoke manual documentado en
-[workflow](workflow.md) y con los endpoints vivos del altar.
+Real integration (the Sprites gateway, the control plane, OpenRouter) has
+no automated suite: it's validated with the manual smoke documented in
+[workflow](workflow.md) and with the lair's live endpoints.
 
-## Referencias
+## References
 
-- [Caza y dieta](../features/caza-y-dieta.md) (la suite más cargada)
-- [Workflow de desarrollo](workflow.md)
-- Configuración: `tsconfig.test.json`, `package.json`
+- [Hunt and diet](../features/caza-y-dieta.md) (the busiest suite)
+- [Development workflow](workflow.md)
+- Configuration: `tsconfig.test.json`, `package.json`

@@ -38,7 +38,7 @@ function depsFrom(fake: Fake, nowMs = Date.now()): CollectDeps {
 
 const NOW = 1_800_000_000_000;
 
-test("disco por debajo del umbral: presa con su porcentaje", async () => {
+test("disk under the threshold: prey with its percentage", async () => {
   const fake: Fake = {
     files: { "/proc/self/mounts": "/dev/sda1 / ext4 rw 0 0\n" },
     sizes: {},
@@ -46,13 +46,13 @@ test("disco por debajo del umbral: presa con su porcentaje", async () => {
     dirs: { "/proc": [], "/.sprite/services": [], "/.sprite/logs/services": [], "/tmp": [] },
   };
   const deps = { ...depsFrom(fake, NOW), statfs: async () => ({ total: 100, free: 2 }) };
-  const out = await collectLocalPrey(deps, { host: "este Sprite", freshSec: 120 });
+  const out = await collectLocalPrey(deps, { host: "this Sprite", freshSec: 120 });
   const disk = out.find((p) => p.category === "disk");
   assert.ok(disk, "el gato debió ver el disco moribundo");
-  assert.match(disk!.title, /disco al 98\.0%/);
+  assert.match(disk!.title, /disk at 98\.0%/);
 });
 
-test("un proceso zombi aparece; un proceso normal no", async () => {
+test("a zombie process appears; a normal one does not", async () => {
   const zombieStat = `1234 (node) Z 1 1234 1 0 -1 0 0 0 0 0 0 0 0 0 20 0 1 0 ${Math.floor(NOW / 10) - 100_000} 0`;
   const normalStat = `1235 (node) S 1 1235 1 0 -1 0 0 0 0 0 0 0 0 0 20 0 1 0 ${Math.floor(NOW / 10) - 100_000} 0`;
   const fake: Fake = {
@@ -75,13 +75,13 @@ test("un proceso zombi aparece; un proceso normal no", async () => {
     },
   };
   const deps = { ...depsFrom(fake, NOW), statfs: async () => ({ total: 100, free: 90 }) };
-  const out = await collectLocalPrey(deps, { host: "este Sprite", freshSec: 120 });
+  const out = await collectLocalPrey(deps, { host: "this Sprite", freshSec: 120 });
   const procs = out.filter((p) => p.category === "process");
   assert.equal(procs.length, 1);
-  assert.match(procs[0]!.title, /zombi node/);
+  assert.match(procs[0]!.title, /zombie process node/);
 });
 
-test("errores frescos en un log reciente: presa de categoría log", async () => {
+test("fresh errors in a recent log: log-category prey", async () => {
   const log = "ok\nfatal: arriba\nok\nerror: abajo\nok\npanic: al final\n";
   const fake: Fake = {
     files: { "/proc/self/mounts": "/dev/sda1 / ext4 rw 0 0\n", "/.sprite/logs/services/web.log": log },
@@ -95,13 +95,13 @@ test("errores frescos en un log reciente: presa de categoría log", async () => 
     },
   };
   const deps = { ...depsFrom(fake, NOW), statfs: async () => ({ total: 100, free: 90 }) };
-  const out = await collectLocalPrey(deps, { host: "este Sprite", freshSec: 120 });
+  const out = await collectLocalPrey(deps, { host: "this Sprite", freshSec: 120 });
   const logs = out.filter((p) => p.category === "log");
   assert.equal(logs.length, 1);
   assert.match(logs[0]!.evidence, /fatal: arriba/);
 });
 
-test("un log viejo no huele: no es presa", async () => {
+test("an old log does not smell: it is not prey", async () => {
   const fake: Fake = {
     files: {
       "/proc/self/mounts": "/dev/sda1 / ext4 rw 0 0\n",
@@ -117,6 +117,6 @@ test("un log viejo no huele: no es presa", async () => {
     },
   };
   const deps = { ...depsFrom(fake, NOW), statfs: async () => ({ total: 100, free: 90 }) };
-  const out = await collectLocalPrey(deps, { host: "este Sprite", freshSec: 120 });
+  const out = await collectLocalPrey(deps, { host: "this Sprite", freshSec: 120 });
   assert.equal(out.filter((p) => p.category === "log").length, 0);
 });

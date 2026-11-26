@@ -54,7 +54,7 @@ export class HuntEngine {
 
   async hunt(source: "cron" | "manual" | "request" = "cron"): Promise<HuntOutcome> {
     if (this.lock) {
-      return { ran: false, reason: "Ya estoy cazando. No me interrumpás.", gifts: [], found: 0, tokens: 0, usd: 0, patrols: [] };
+      return { ran: false, reason: "Already hunting. Don't interrupt me.", gifts: [], found: 0, tokens: 0, usd: 0, patrols: [] };
     }
     this.lock = true;
     try {
@@ -71,16 +71,16 @@ export class HuntEngine {
 
     const purse = wallet.canSpend();
     if (!purse.ok) {
-      log(`[cacería] ${source}: el gato ayuna (${purse.reason})`);
+      log(`[hunt] ${source}: the cat fasts (${purse.reason})`);
       return { ran: false, reason: purse.reason, gifts: [], found: 0, tokens: 0, usd: 0, patrols: [] };
     }
 
     const freshSec = freshnessWindowSec(this.cfg);
     const collect =
       this.deps.collect ??
-      (async ({ freshSec: fs }) => collectLocalPrey(realDeps(), { host: "este Sprite", freshSec: fs }));
+      (async ({ freshSec: fs }) => collectLocalPrey(realDeps(), { host: "this Sprite", freshSec: fs }));
 
-    const preyList = await collect({ host: "este Sprite", freshSec });
+    const preyList = await collect({ host: "this Sprite", freshSec });
     const state = memory.state;
 
     // Dos noches con el mismo hallazgo = podredumbre. Se ve en el acta.
@@ -135,7 +135,7 @@ export class HuntEngine {
         preyTitle: prey.title,
         narration,
         advice,
-        huntNotes: `${verdict.reason} · confianza ${verdict.confidence.toFixed(2)}`,
+        huntNotes: `${verdict.reason} · confidence ${verdict.confidence.toFixed(2)}`,
         tokens: used,
         host: prey.host ?? "gatanas",
         at: nowIso,
@@ -148,7 +148,7 @@ export class HuntEngine {
         try {
           await this.deps.deliver(gift);
         } catch (err) {
-          log(`[reparto] no pude entregar ${giftLabel(gift.kind)}: ${(err as Error).message}`);
+          log(`[deliver] couldn't deliver ${giftLabel(gift.kind)}: ${(err as Error).message}`);
         }
       }
     }
@@ -161,25 +161,25 @@ export class HuntEngine {
     }
     await memory.save();
 
-    log(`[cacería] ${source}: ${preyList.length} presas, ${gifts.length} regalos, ${tokens} tokens`);
+    log(`[hunt] ${source}: ${preyList.length} prey, ${gifts.length} gifts, ${tokens} tokens`);
     return {
       ran: true,
       gifts,
       found: preyList.length,
       tokens,
       usd,
-      patrols: [{ host: "este Sprite", at: nowIso, findings: preyList, restarted: [], notes: [] }],
+      patrols: [{ host: "this Sprite", at: nowIso, findings: preyList, restarted: [], notes: [] }],
     };
   }
 }
 
 export function timeOfDay(iso: string): string {
   const h = new Date(iso).getUTCHours();
-  if (h < 5) return "madrugada";
-  if (h < 11) return "mañana";
-  if (h < 15) return "mediodía";
-  if (h < 19) return "tarde";
-  return "noche";
+  if (h < 5) return "small hours";
+  if (h < 11) return "morning";
+  if (h < 15) return "midday";
+  if (h < 19) return "afternoon";
+  return "night";
 }
 
 /** Fuente para probar el motor sin tocar el disco ni la red. */

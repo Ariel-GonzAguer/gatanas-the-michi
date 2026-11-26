@@ -76,7 +76,7 @@ export class NineLives {
     const target =
       checkpointId ??
       (m.checkpoints[m.checkpoints.length - 1]?.id ||
-        (await this.takeCheckpoint(`Antes de: ${reason}`))?.id);
+        (await this.takeCheckpoint(`Before: ${reason}`))?.id);
     if (!target) return null;
 
     const event: LifeEvent = {
@@ -154,13 +154,13 @@ export class NineLives {
   static narrative(e: LifeEvent): string {
     switch (e.kind) {
       case "born":
-        return `Vida ${e.id.slice(0, 6)}: Gatanás tomó un checkpoint. Aquí es donde recuerda estar entero.`;
+        return `Life ${e.id.slice(0, 6)}: Gatanás took a checkpoint. This is where it remembers being whole.`;
       case "sacrificed":
-        return `Gatanás tiró algo de la mesa (${e.reason}). Cerró los ojos. Una vida menos.`;
+        return `Gatanás knocked something off the table (${e.reason}). It closed its eyes. One life fewer.`;
       case "restored":
-        return `Gatanás volvió desde ${e.id.slice(0, 6)}: ${e.reason}. No confirma que le haya gustado.`;
+        return `Gatanás came back from ${e.id.slice(0, 6)}: ${e.reason}. It won't confirm it enjoyed it.`;
       case "reincarnated":
-        return `Nueve vidas nuevas otra vez. ${e.reason}`;
+        return `Nine brand-new lives again. ${e.reason}`;
     }
   }
 }
@@ -175,7 +175,7 @@ export function fakeSpritesApi(opts: { fail?: boolean } = {}): SpritesApi {
       return { id: `cp-${n}`, comment, created_at: new Date().toISOString() };
     },
     async restoreCheckpoint(id: string) {
-      if (opts.fail) throw new Error(`no pude restaurar ${id}`);
+      if (opts.fail) throw new Error(`couldn't restore ${id}`);
     },
     async listServices() { return []; },
     async restartService() {},

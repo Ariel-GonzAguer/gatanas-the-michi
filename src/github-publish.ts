@@ -80,15 +80,15 @@ async function main(): Promise<void> {
   const root = process.env.REPO_ROOT ?? "/home/sprite/gatanas-the-michi";
   const message =
     process.argv.includes("--message")
-      ? process.argv[process.argv.indexOf("--message") + 1] ?? "mrrp"
-      : "Gatanás: nueva cacería publicada. mrrp.";
+      ? process.argv[process.argv.indexOf("--message") + 1] ?? "prrrr"
+      : "Gatanás: new hunt published. prrrr.";
 
   if (!connection || !repo) {
     throw new Error("Faltan GITHUB_CONNECTION o REPO (ver README).");
   }
 
   const files = await collectFiles(root);
-  console.log(`→ ${files.length} archivos listos`);
+  console.log(`→ ${files.length} files ready`);
 
   // 1. Rama actual (si no existe main, se crea desde la primera).
   const ref = await gh(gatewayBase, connection, "GET", `/repos/${repo}/git/ref/heads/${branch}`);
@@ -113,13 +113,13 @@ async function main(): Promise<void> {
     tree: treeEntries,
   });
   if (newTree.status !== 201 && newTree.status !== 200) {
-    throw new Error(`No pude crear el árbol: ${newTree.status} ${newTree.text.slice(0, 300)}`);
+    throw new Error(`couldn't create the tree: ${newTree.status} ${newTree.text.slice(0, 300)}`);
   }
   const treeSha = (newTree.json as { sha: string }).sha;
 
   // 3. Commit con la firma del gato.
   const commit = await gh(gatewayBase, connection, "POST", `/repos/${repo}/git/commits`, {
-    message: `${message}\n\n— Gatanás The Michi, desde su Sprite`,
+    message: `${message}\n\n— Gatanás The Michi, from his Sprite`,
     tree: treeSha,
     parents: [headSha],
   });
@@ -137,10 +137,10 @@ async function main(): Promise<void> {
     throw new Error(`No pude mover la rama: ${upd.status} ${upd.text.slice(0, 300)}`);
   }
 
-  console.log(`✓ publicado ${commitSha.slice(0, 7)} en ${repo}@${branch} (${files.length} archivos)`);
+  console.log(`✓ published ${commitSha.slice(0, 7)} on ${repo}@${branch} (${files.length} files)`);
 }
 
 main().catch((err) => {
-  console.error("el gato no pudo comitear:", err instanceof Error ? err.message : err);
+  console.error("the cat couldn't commit:", err instanceof Error ? err.message : err);
   process.exit(1);
 });

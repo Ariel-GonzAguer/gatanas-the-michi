@@ -17,12 +17,12 @@ $SUDO tee "$BIN/gatanas" >/dev/null <<EOF
 exec node $DIR/dist/cli.js "\$@"
 EOF
 
-for cmd in hunt altar lives meow revive nahualada; do
+for cmd in hunt altar guarida lives meow churus revive nahualada; do
   $SUDO tee "$BIN/$cmd" >/dev/null <<EOF
 #!/bin/sh
 exec gatanas $cmd "\$@"
 EOF
 done
 
-$SUDO chmod 755 "$BIN/gatanas" "$BIN/hunt" "$BIN/altar" "$BIN/lives" "$BIN/meow" "$BIN/revive" "$BIN/nahualada"
-echo "listo: gatanas, hunt, altar, lives, meow, revive (alias nahualada)"
+$SUDO chmod 755 "$BIN/gatanas" "$BIN/hunt" "$BIN/altar" "$BIN/guarida" "$BIN/lives" "$BIN/meow" "$BIN/churus" "$BIN/revive" "$BIN/nahualada"
+echo "listo: gatanas, hunt, altar/guarida, lives, meow, churus, revive (alias nahualada)"

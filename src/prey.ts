@@ -83,7 +83,7 @@ export function giftEmoji(kind: GiftKind, unicode = true): string {
       case "gpu":
         return "[GPU]";
       case "leaf":
-        return "[HOJA]";
+        return "[LEAF]";
       case "tofu":
         return "[TOFU]";
     }
@@ -120,10 +120,10 @@ export function giftGlyph(kind: GiftKind): string {
 export function giftLabel(kind: GiftKind): string {
   switch (kind) {
     case "gpu":
-      return "Una GPU";
+      return "A GPU";
     case "leaf":
-      return "Una hoja de árbol";
+      return "A tree leaf";
     case "tofu":
-      return "Tofu fermentado";
+      return "Fermented tofu";
   }
 }

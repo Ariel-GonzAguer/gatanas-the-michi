@@ -58,7 +58,7 @@ export class Scheduler {
       const last = [...st.lifeEvents].reverse().find((e) => e.kind === "restored");
       if (last && this.d.now() - Date.parse(last.at) < 120_000 && st.livesRemaining > 0) {
         this.nahualadaUntilMs = this.d.now() + 20_000;
-        log("nahualada: desperté de una restauración. Me tomo veinte segundos para recordar quién soy.");
+        log("nahualada: I woke up from a restoration. I'm taking twenty seconds to remember who I am.");
       }
     }
 
@@ -73,7 +73,7 @@ export class Scheduler {
     // Rumia: revisa cada hora si ya amaneció un día nuevo.
     this.every(3_600_000, () => void this.maybeRuminate());
     void this.maybeRuminate();
-    log(`pulso iniciado: cacería cada ${this.d.cfg.huntIntervalSec}s, vidas ${this.d.memory.state.livesRemaining}.`);
+    log(`pulse started: hunting every ${this.d.cfg.huntIntervalSec}s, lives ${this.d.memory.state.livesRemaining}.`);
   }
 
   stop(): void {
@@ -97,7 +97,7 @@ export class Scheduler {
 
   async huntNow(source: "cron" | "manual" | "request" = "manual"): Promise<Awaited<ReturnType<HuntEngine["hunt"]>> | null> {
     if (this.inNahualada) {
-      log("estoy en nahualada: no cazo, no hablo, no existo del todo. Probá en un rato.");
+      log("I'm in a nahualada: no hunting, no talking, barely existing. Try again in a while.");
       return null;
     }
     return this.d.hunt.hunt(source);
@@ -119,20 +119,20 @@ export class Scheduler {
     await this.d.memory.update((m) => {
       m.opinion = { quote: opinion.quote, ts: opinion.ts, tokens: opinion.tokens ?? 0 };
     });
-    log("rumia guardada. El altar ya tiene la opinión del gato.");
+    log("rumination saved. The lair now has the cat's opinion.");
   }
 
   /** El humano le ordena al gato tirar algo de la mesa y revivir. */
   async performNahualada(reason: string): Promise<string> {
     const ok = this.d.memory.state.livesRemaining > 0;
-    if (!ok) return "No me quedan vidas. Ni modo. miau.";
+    if (!ok) return "I have no lives left. Oh well. miau.";
     this.nahualadaUntilMs = this.d.now() + 20_000;
     await this.d.memory.save();
-    return `Me tiré de la mesa a propósito (${reason}). Estoy reviviendo: veinte segundos de silencio y vuelvo. Que conste.`;
+    return `I threw myself off the table on purpose (${reason}). I'm reviving: twenty seconds of silence and I'll be back. For the record.`;
   }
 }
 
 /** Saludo del gato visto desde fuera. */
 export function restGreeting(name: string): string {
-  return `Soy ${name}. Vivo en este Sprite. No estoy despierto ahora, pero mi altar sí. miau.`;
+  return `I'm ${name}. I live in this Sprite. I'm not awake right now, but my lair is. miau.`;
 }

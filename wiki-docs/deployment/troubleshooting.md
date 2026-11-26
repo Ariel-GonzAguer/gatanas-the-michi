@@ -1,191 +1,192 @@
-# Troubleshooting — incidentes reales
+# Troubleshooting — real incidents
 
-Entradas extraídas de incidentes reales ocurridos durante el desarrollo y la
-operación del agente (2026-11-26). Cada una tiene la evidencia que la
-respalda.
-
----
-
-### El chat responde vacío o con el fallback de cansancio
-
-**Síntoma**: `POST /api/chat` devuelve el reply de respaldo ("Te escuché,
-pero no me salen las palabras…") aunque el gateway responde 200.
-
-**Causa**: los modelos que razonan antes de escribir (GLM 5.3 Flash,
-Nemotron con reasoning) devuelven `choices[0].message.content: null` con
-`finish_reason: "length"` cuando `max_tokens` no alcanza para el monólogo
-interno más la respuesta.
-
-**Solución**:
-1. Dar headroom fijo a `max_tokens` (`REASONING_HEADROOM = 2200` en
-   `src/habitat.ts`; se aplica siempre porque el margen no usado no cuesta).
-2. Tratar `content` vacío como error (throw) para que la cadena de modelos
-   y el repertorio de emergencia entren en juego.
-
-**Verificación**: pedir un chat y revisar que el log no tenga
-`la voz del gato falló: respuesta vacía`.
-
-**Referencias**: `src/habitat.ts` (`chatOnce`), `src/chat.ts` (`tiredReply`).
+Entries extracted from real incidents that happened during the agent's
+development and operation (2026-11-26). Each one carries the evidence that
+backs it.
 
 ---
 
-### 429 upstream en los modelos `:free`
+### The chat replies empty or with the tired fallback
 
-**Síntoma**: `{"error":{"code":429,...,"is_byok":false}}` desde OpenRouter
-para `google/gemma-4-31b-it:free` u otros `:free`.
+**Symptom**: `POST /api/chat` returns the fallback reply ("I heard you,
+but the words aren't coming out…") even though the gateway responds 200.
 
-**Causa**: los modelos free corren en pools compartidos upstream que se
-saturan por ratos; el 429 lo emite el proveedor, no OpenRouter.
+**Cause**: models that reason before writing (GLM 5.3 Flash, Nemotron with
+reasoning) return `choices[0].message.content: null` with
+`finish_reason: "length"` when `max_tokens` isn't enough for the internal
+monologue plus the reply.
 
-**Solución**:
-1. Encadenar modelos para el chat (`chatModelFallbacks`): free primero,
-   pagado de último recurso (`src/config.ts`).
-2. No reintentar en bucle: la cadena ya es el reintento.
+**Solution**:
+1. Give `max_tokens` a fixed headroom (`REASONING_HEADROOM = 2200` in
+   `src/habitat.ts`; applied always, because unused margin costs nothing).
+2. Treat an empty `content` as an error (throw) so the model chain and the
+   emergency repertoire come into play.
 
-**Verificación**: `GET /api/status` sigue en 200 y el chat responde aunque
-el free esté saturado (consume del pagado).
+**Verification**: start a chat and check that the log has no
+`the cat's voice failed: empty reply`.
 
-**Referencias**: `src/habitat.ts` (`Voice.chat`), `.env.example`
+**References**: `src/habitat.ts` (`chatOnce`), `src/chat.ts` (`tiredReply`).
+
+---
+
+### 429 upstream on the `:free` models
+
+**Symptom**: `{"error":{"code":429,...,"is_byok":false}}` from OpenRouter
+for `google/gemma-4-31b-it:free` or other `:free` models.
+
+**Cause**: the free models run on shared upstream pools that get saturated
+for stretches; the 429 is emitted by the provider, not by OpenRouter.
+
+**Solution**:
+1. Chain models for chat (`chatModelFallbacks`): free first, paid as the
+   last resort (`src/config.ts`).
+2. Don't retry in a loop: the chain is already the retry.
+
+**Verification**: `GET /api/status` keeps answering 200 and the chat
+replies even with the free model saturated (it draws from the paid one).
+
+**References**: `src/habitat.ts` (`Voice.chat`), `.env.example`
 (`GATANAS_MODEL_CHAT_FALLBACKS`).
 
 ---
 
-### 502 del proxy del Sprite en `/api/chat`
+### 502 from the Sprite proxy on `/api/chat`
 
-**Síntoma**: la URL pública devuelve 502 con HTML de error mientras el
-mismo endpoint por localhost responde bien.
+**Symptom**: the public URL returns 502 with an HTML error page while the
+same endpoint over localhost answers fine.
 
-**Causa**: la ventana de tiempo del proxy es acotada; un eslabón lento
-(p. ej. un modelo de razonamiento como `nvidia/nemotron-3.5-lightning:free`)
-consume la ventana antes de que la cadena termine.
+**Cause**: the proxy's time window is bounded; a slow link (e.g. a
+reasoning model like `nvidia/nemotron-3.5-lightning:free`) eats the window
+before the chain finishes.
 
-**Solución**:
-1. Sacar los eslabones lentos de la cadena de chat (la cadena quedó en 2:
+**Solution**:
+1. Take the slow links out of the chat chain (the chain ended up at 2:
    gemma free → glm flash).
-2. Mantener `GATANAS_MODEL_TIMEOUT_MS` (30000) por debajo de la ventana
-   del proxy para que el eslabón de reserva tenga tiempo.
+2. Keep `GATANAS_MODEL_TIMEOUT_MS` (30000) below the proxy's window so the
+   fallback link has time.
 
-**Verificación**: chats sucesivos por la URL pública responden 200 en <30 s.
+**Verification**: successive chats over the public URL answer 200 in <30 s.
 
-**Referencias**: `src/config.ts`, `src/habitat.ts`.
-
----
-
-### Git Data API falla con 409 en un repo nuevo
-
-**Síntoma**: `POST /repos/<repo>/git/blobs` (o `trees`, `commits`) responde
-`409 {"message": "Git Repository is empty."}`.
-
-**Causa**: la Git Data API no opera sobre repos sin un solo commit; el repo
-se creó vacío desde la web.
-
-**Solución**:
-1. Crear el primer archivo con `PUT /repos/<repo>/contents/<path>` y un
-   `content` base64: eso crea la rama `main` y el commit inicial.
-2. Recién después usar el flujo blob→tree→commit→ref.
-
-**Verificación**: `GET /repos/<repo>/branches` devuelve `main`.
-
-**Referencias**: `src/github-publish.ts`.
+**References**: `src/config.ts`, `src/habitat.ts`.
 
 ---
 
-### Archivos borrados del repo reaparecen en la publicación siguiente
+### Git Data API fails with 409 on a new repo
 
-**Síntoma**: se borran archivos del repo (p. ej. sondas de prueba) y vuelven
-a aparecer tras el próximo `github-publish.js`.
+**Symptom**: `POST /repos/<repo>/git/blobs` (or `trees`, `commits`)
+answers `409 {"message": "Git Repository is empty."}`.
 
-**Causa**: el script publica el ÁRBOL DE TRABAJO del Sprite; si el archivo
-sigue en el árbol, se vuelve a subir. Además `base_tree` fusiona con el
-árbol remoto: no reemplaza.
+**Cause**: the Git Data API doesn't operate on a repo without a single
+commit; the repo was created empty from the web.
 
-**Solución**:
-1. Borrar los archivos no deseados del árbol de trabajo del Sprite antes
-   de publicar.
-2. Verificar con `GET /repos/<repo>/contents/` después de cada publicación.
+**Solution**:
+1. Create the first file with `PUT /repos/<repo>/contents/<path>` and a
+   base64 `content`: that creates the `main` branch and the initial
+   commit.
+2. Only after that, use the blob→tree→commit→ref flow.
 
-**Referencias**: `src/github-publish.ts` (`collectFiles`, `SKIP_*`).
+**Verification**: `GET /repos/<repo>/branches` returns `main`.
+
+**References**: `src/github-publish.ts`.
 
 ---
 
-### Ediciones externas de `memory.json` se pierden
+### Files deleted from the repo reappear in the next publish
 
-**Síntoma**: se edita el acta en el disco y, tras reiniciar el servicio, la
-edición desaparece.
+**Symptom**: files are deleted from the repo (e.g. test probes) and
+reappear after the next `github-publish.js`.
 
-**Causa**: el handler de SIGTERM guarda el estado en memoria del proceso
-sobre el archivo, pisando la edición externa.
+**Cause**: the script publishes the Sprite's WORKING TREE; if the file is
+still in the tree, it gets uploaded again. Also, `base_tree` merges with
+the remote tree: it doesn't replace.
 
-**Solución**:
+**Solution**:
+1. Delete the unwanted files from the Sprite's working tree before
+   publishing.
+2. Verify with `GET /repos/<repo>/contents/` after each publish.
+
+**References**: `src/github-publish.ts` (`collectFiles`, `SKIP_*`).
+
+---
+
+### External edits to `memory.json` get lost
+
+**Symptom**: the acta is edited on disk and, after restarting the service,
+the edit is gone.
+
+**Cause**: the SIGTERM handler saves the process's in-memory state over
+the file, clobbering the external edit.
+
+**Solution**:
 1. `sprite-env services stop gatanas`.
-2. Editar `/home/sprite/.gatanas/memory.json`.
+2. Edit `/home/sprite/.gatanas/memory.json`.
 3. `sprite-env services start gatanas`.
 
-**Verificación**: `GET /api/status` refleja la edición tras el arranque.
+**Verification**: `GET /api/status` reflects the edit after startup.
 
-**Referencias**: `src/main.ts` (shutdown), `src/memory.ts`.
-
----
-
-### Inyectar la opinión como turno `assistant` degrada el chat
-
-**Síntoma**: con la opinión persistida en el acta, las respuestas del chat
-empeoran o llegan vacías.
-
-**Causa**: pasar la confesión previa como turno `role: "assistant"` del
-historial confunde al modelo (intenta "continuar" su propio monólogo en
-lugar de responder).
-
-**Solución**:
-1. Incluir la opinión como dato dentro del prompt de usuario ("Lo que ya
-   opinás de él (no lo repitas literal, evolucioná): …").
-
-**Verificación**: chats con opinión presente responden con carácter y sin
-repetir la confesión literal.
-
-**Referencias**: `src/chat.ts` (`speak`).
+**References**: `src/main.ts` (shutdown), `src/memory.ts`.
 
 ---
 
-### El texto del acta quedó con la onomatopeya o palabras viejas
+### Injecting the opinion as an `assistant` turn degrades the chat
 
-**Síntoma**: regalos viejos del altar muestran "mrrp" o "atún" después de
-un cambio de vocabulario del gato.
+**Symptom**: with the opinion persisted in the acta, the chat replies get
+worse or come back empty.
 
-**Causa**: las narraciones son texto persistido: el cambio de persona solo
-afecta generaciones futuras.
+**Cause**: passing the previous confession as an `role: "assistant"` turn
+of the history confuses the model (it tries to "continue" its own
+monologue instead of answering).
 
-**Solución**:
-1. Parar el servicio (ver entrada anterior), reemplazar en el JSON
-   (`mrrp` → `prrrr`, `atún` → `churus`) en `gifts[*].narration/advice/
-   huntNotes` y `opinion.quote`, y arrancar de nuevo.
+**Solution**:
+1. Include the opinion as data inside the user prompt ("What you already
+   think of him (don't repeat it literally, evolve it): …").
 
-**Verificación**: `GET /api/gifts` no contiene la palabra vieja.
+**Verification**: chats with the opinion present reply with character and
+without repeating the confession verbatim.
 
-**Referencias**: `src/narrate.ts` (`PERSONA`), `src/memory.ts`.
+**References**: `src/chat.ts` (`speak`).
 
 ---
 
-### `sprite exec` dice "command required" y el comando corre en tu máquina
+### The acta's text was left with the old onomatopoeia or words
 
-**Síntoma**: pegar la invocación en dos líneas — `sprite exec -s <sprite>
---no-stdin --` arriba y el comando abajo — produce `Error: command required`
-y después el comando se ejecuta **localmente**, con errores que no tienen
-sentido dentro del Sprite (p. ej. `find: '/tmp/systemd-private-…':
-Permission denied`, un directorio de systemd que solo existe en la máquina
-desde la que se llama).
+**Symptom**: old gifts in the lair show "mrrp" or "atún" after a change of
+the cat's vocabulary.
 
-**Causa**: el salto de línea parte la invocación en dos comandos bash
-independientes. El primero queda sin comando remoto; el segundo corre en la
-máquina local, no en el Sprite.
+**Cause**: narrations are persisted text: a persona change only affects
+future generations.
 
-**Solución**:
-1. Todo en una sola línea, o cerrar la línea con `\` de continuación.
-2. Comandos remotos con pipes o `&&`: envolverlos en
-   `bash -c 'comando completo'`.
+**Solution**:
+1. Stop the service (see the previous entry), replace in the JSON
+   (`mrrp` → `prrrr`, `atún` → `churus`) in `gifts[*].narration/advice/
+   huntNotes` and `opinion.quote`, and start it again.
 
-**Verificación**: `sprite exec -s <sprite> --no-stdin -- hostname` devuelve
-el nombre del Sprite. Regla del prompt: `sprite@<sprite>` = dentro;
-cualquier otro usuario = tu máquina.
+**Verification**: `GET /api/gifts` doesn't contain the old word.
 
-**Referencias**: CLI `sprite exec --help`; [workflow §5](../development/workflow.md).
+**References**: `src/narrate.ts` (`PERSONA`), `src/memory.ts`.
+
+---
+
+### `sprite exec` says "command required" and the command runs on your machine
+
+**Symptom**: pasting the invocation in two lines — `sprite exec -s <sprite>
+--no-stdin --` on top and the command below — produces `Error: command required`,
+and then the command runs **locally**, with errors that make no sense
+inside the Sprite (e.g. `find: '/tmp/systemd-private-…':
+Permission denied`, a systemd directory that only exists on the machine
+the call is made from).
+
+**Cause**: the line break splits the invocation into two independent bash
+commands. The first is left without a remote command; the second runs on
+the local machine, not on the Sprite.
+
+**Solution**:
+1. Everything on a single line, or close the line with a `\` continuation.
+2. Remote commands with pipes or `&&`: wrap them in
+   `bash -c 'full command'`.
+
+**Verification**: `sprite exec -s <sprite> --no-stdin -- hostname` returns
+the Sprite's name. Prompt rule: `sprite@<sprite>` = inside;
+any other user = your machine.
+
+**References**: CLI `sprite exec --help`; [workflow §5](../development/workflow.md).

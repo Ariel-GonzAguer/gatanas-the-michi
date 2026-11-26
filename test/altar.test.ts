@@ -25,12 +25,12 @@ async function boot() {
     id: "g1",
     kind: "gpu",
     preyKey: "k",
-    preyTitle: "disco al 96.0%",
-    narration: "Mae, traje una GPU. mrrp.",
-    advice: "Limpiar /tmp.",
+    preyTitle: "disk at 96.0%",
+    narration: "Mae, brought you a GPU. prrrr.",
+    advice: "Clean /tmp.",
     huntNotes: "",
     tokens: 0,
-    host: "este Sprite",
+    host: "this Sprite",
     at: new Date().toISOString(),
   });
   await memory.save();
@@ -40,7 +40,7 @@ async function boot() {
     isAlive: () => true,
     inNahualada: false,
     huntNow: async () => ({ ran: true, gifts: [], found: 0, tokens: 0, usd: 0, patrols: [] }),
-    performNahualada: async () => "me tiré",
+    performNahualada: async () => "I threw myself",
   } as unknown as Scheduler;
   const server = createServer({
     cfg,
@@ -57,22 +57,22 @@ async function boot() {
   return { base: `http://127.0.0.1:${port}`, server, memory };
 }
 
-test("el altar se sirve en / y muestra el regalo", async () => {
+test("the lair is served at / and shows the gift", async () => {
   const { base, server } = await boot();
   try {
     const res = await fetch(`${base}/`);
     const html = await res.text();
     assert.equal(res.status, 200);
     assert.match(html, /Gatanás The Michi/);
-    assert.match(html, /Una GPU/);
-    assert.match(html, /Limpiar \/tmp/);
+    assert.match(html, /A GPU/);
+    assert.match(html, /Clean \/tmp/);
     assert.equal(res.headers.get("x-frame-options"), "DENY");
   } finally {
     server.close();
   }
 });
 
-test("/api/status y /api/purr responden con JSON", async () => {
+test("/api/status and /api/purr answer with JSON", async () => {
   const { base, server, memory } = await boot();
   try {
     const st = (await (await fetch(`${base}/api/status`)).json()) as { gifts: number };
@@ -88,7 +88,51 @@ test("/api/status y /api/purr responden con JSON", async () => {
   }
 });
 
-test("una ruta desconocida devuelve 404 maullado", async () => {
+test("the lair is served at / and /guarida, with chat feedback, churus and how-it-works", async () => {
+  const { base, server } = await boot();
+  try {
+    for (const ruta of ["/", "/guarida"]) {
+      const res = await fetch(`${base}${ruta}`);
+      const html = await res.text();
+      assert.equal(res.status, 200);
+      assert.match(html, /the lair of gifts/);
+      assert.match(html, /You're looking at my lair/);
+      assert.match(html, /Gatanás is thinking about what to meow back/);
+      assert.match(html, /Give churu/);
+      assert.match(html, /How does this site work\?/);
+      assert.match(html, /aria-live="polite"/);
+      assert.ok(!html.includes('class="altar"'));
+      assert.ok(!/el altar/i.test(html));
+    }
+  } finally {
+    server.close();
+  }
+});
+
+test("POST /api/churus increments the counter with different reactions", async () => {
+  const { base, server, memory } = await boot();
+  try {
+    const r1 = (await (await fetch(`${base}/api/churus`, { method: "POST" })).json()) as {
+      churus: number;
+      reply: string;
+    };
+    const r2 = (await (await fetch(`${base}/api/churus`, { method: "POST" })).json()) as {
+      churus: number;
+      reply: string;
+    };
+    assert.equal(r1.churus, 1);
+    assert.equal(r2.churus, 2);
+    assert.match(r1.reply, /prrrr|miau/);
+    assert.notEqual(r1.reply, r2.reply);
+    assert.equal(memory.state.churus, 2);
+    const st = (await (await fetch(`${base}/api/status`)).json()) as { churus: number };
+    assert.equal(st.churus, 2);
+  } finally {
+    server.close();
+  }
+});
+
+test("an unknown route returns a meowed 404", async () => {
   const { base, server } = await boot();
   try {
     const res = await fetch(`${base}/no-existe`);
@@ -99,7 +143,7 @@ test("una ruta desconocida devuelve 404 maullado", async () => {
   }
 });
 
-test("el altar escapa HTML de la narración (no hay inyección desde el modelo)", () => {
+test("the lair HTML-escapes the narration (no injection from the model)", () => {
   const html = altarHtml({
     name: "Gatanás",
     alive: true,
@@ -132,6 +176,8 @@ test("el altar escapa HTML de la narración (no hay inyección desde el modelo)"
       checkpoints: [],
       purrs: 0,
       lastPurrAt: null,
+      churus: 0,
+      lastChurusAt: null,
       hunts: 0,
       lastHuntAt: null,
       lastHuntFound: 0,

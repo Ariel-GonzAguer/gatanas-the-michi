@@ -41,7 +41,7 @@ export function pushoverDeliverer(
       const body = [
         gift.narration,
         "",
-        `Disección: ${gift.advice}`,
+        `Dissection: ${gift.advice}`,
       ].join("\n").slice(0, 1024);
       const res = await post("/v1/messages", {
         user: cfg.userKey,
@@ -51,7 +51,7 @@ export function pushoverDeliverer(
         sound: gift.kind === "gpu" ? "bugle" : "none",
       });
       if (res.status < 200 || res.status >= 300) {
-        throw new Error(`Pushover respondió ${res.status}: ${res.text.slice(0, 200)}`);
+        throw new Error(`Pushover answered ${res.status}: ${res.text.slice(0, 200)}`);
       }
     },
   };
@@ -66,6 +66,6 @@ export function altarOnly(): Deliverer {
 export function notificationText(gift: Gift): { title: string; message: string } {
   return {
     title: `${giftEmoji(gift.kind)} ${giftLabel(gift.kind)} — ${gift.preyTitle}`.slice(0, 250),
-    message: [gift.narration, "", `Disección: ${gift.advice}`].join("\n").slice(0, 1024),
+    message: [gift.narration, "", `Dissection: ${gift.advice}`].join("\n").slice(0, 1024),
   };
 }

@@ -1,108 +1,114 @@
-# Flujos de datos
+# Data flows
 
-Tres flujos concentran casi todo el comportamiento del agente: la cacería, la
-conversación y la rumiación diaria. Los tres escriben en el mismo acta
-(`memory.json`) y pasan por el monedero antes de gastar tokens.
+Three flows concentrate almost all of the agent's behavior: the hunt, the
+conversation, and the daily rumination. All three write to the same acta —
+the cat's persistent record (`memory.json`) — and go through the wallet
+before spending tokens.
 
-## 1. Flujo de cacería
+## 1. Hunt flow
 
-Trigger: `Scheduler` cada `GATANAS_HUNT_INTERVAL_SEC` (900 s), `POST /api/hunt`
-o `node dist/cli.js hunt`.
+Trigger: the `Scheduler` every `GATANAS_HUNT_INTERVAL_SEC` (900 s),
+`POST /api/hunt`, or `node dist/cli.js hunt`.
 
 ```
 ┌──────────┐   ┌────────────┐   ┌──────────┐   ┌───────────┐
 │ Scheduler │──→│ HuntEngine │──→│  collect │──→│   diet    │
-│  (cron)   │   │  .hunt()   │   │ presas   │   │ GPU/hoja/ │
+│  (cron)   │   │  .hunt()   │   │ prey     │   │ GPU/leaf/ │
 └──────────┘   └─────┬──────┘   └──────────┘   │  tofu     │
                      │                          └─────┬─────┘
         ┌────────────▼──────────────────────────────────▼───────┐
-        │ ¿hoja confiable? → fallbackNarration (0 tokens)       │
-        │ si no → narrateGift → Voice → gateway → OpenRouter    │
+        │ trustworthy leaf? → fallbackNarration (0 tokens)      │
+        │ else → narrateGift → Voice → gateway → OpenRouter     │
         └────────────┬──────────────────────────────────────────┘
                      │
         ┌────────────▼──────────┐   ┌───────────────────────┐
-        │ memory.addGift + save │──→│ deliver (opcional)    │
-        │ giftedKeys[día]       │   │ altar siempre recibe  │
+        │ memory.addGift + save │──→│ deliver (optional)    │
+        │ giftedKeys[day]       │   │ the lair always gets  │
         └───────────────────────┘   └───────────────────────┘
 ```
 
-Pasos:
+Steps:
 
-1. `Wallet.canSpend()` decide si la ronda arranca (tope diario y tope de la
-   llave; ver [monedero](../features/monedero.md)). Si no autoriza, la caza
-   no corre y el motivo queda en el log.
-2. `collectLocalPrey` inventaría el propio sistema: porcentaje de disco,
-   caja de arena (`/tmp` > 512 MiB), procesos zombis de `/proc`, errores
-   frescos en logs recientes.
-3. `judgeHeuristic` + `chooseGift` clasifican cada presa. El modelo no
-   interviene en la clasificación.
-4. Las hojas de árbol con confianza alta se narran con repertorio local
-   (cero tokens). GPUs y tofus se narran con `Voice.chat("meow", ...)`.
-5. Cada regalo entra al acta y se marca `giftedKeys[prey.key] = hoy` para no
-   repetir el mismo regalo el mismo día.
-6. `deliver` (Pushover por conector, si está configurado) nunca puede fallar
-   la cacería: su error se registra y el regalo queda igual en el altar.
+1. `Wallet.canSpend()` decides whether the round starts (the daily cap and
+   the key's cap; see [the wallet](../features/monedero.md)). If it doesn't
+   authorize, the hunt doesn't run and the reason lands in the log.
+2. `collectLocalPrey` inventories the system itself: disk percentage, the
+   sandbox (`/tmp` > 512 MiB), zombie processes from `/proc`, fresh errors
+   in recent logs.
+3. `judgeHeuristic` + `chooseGift` classify each find. The model takes no
+   part in the classification.
+4. Tree leaves with high confidence are narrated from the local repertoire
+   (zero tokens). GPUs and tofus are narrated with `Voice.chat("meow", ...)`.
+5. Every gift enters the acta and marks `giftedKeys[prey.key] = today` so
+   the same gift isn't repeated on the same day.
+6. `deliver` (Pushover via connector, if configured) can never fail the
+   hunt: its error is logged and the gift still lands in the lair.
 
-## 2. Flujo de conversación
+## 2. Conversation flow
 
 Trigger: `POST /api/chat`.
 
 ```
-mensaje ──→ speak() ──→ ¿intent canned? ──sí──→ respuesta local
+message ──→ speak() ──→ canned intent? ──yes──→ local reply
                          │
                          no
                          ▼
-              prompt con contexto del acta
-              (vidas, caricias, regalos, opinión previa)
+              prompt with acta context
+              (lives, purrs, gifts, previous opinion)
                          │
                          ▼
               Voice.chat("chat") ──→ google/gemma-4-31b-it:free
-                         │ 429 o vacío
+                         │ 429 or empty
                          ▼
-              z-ai/glm-5.3-flash (pagado, último recurso)
+              z-ai/glm-5.3-flash (paid, last resort)
                          │
                          ▼
               stripMarkdown ──→ reply JSON
 ```
 
-Detalles clave:
+Key details:
 
-- Los intents canned (`acarici*`, `churus|atún|comida`, `cómo estás`,
-  `qué haces`) se responden sin tokens.
-- La cadena de modelos vive en `Voice.chat`: para la tarea `chat` prueba el
-  modelo asignado y luego `chatModelFallbacks`. Cada eslabón absorbe 429
-  upstream y respuestas vacías de modelos que razonan.
-- La opinión previa del gato viaja dentro del prompt de usuario, no como
-  turno `assistant`: inyectarla como turno propio degradaba las respuestas
-  (ver [troubleshooting](../deployment/troubleshooting.md)).
-- Si toda la cadena falla, `tiredReply()` responde con carácter en vez de
-  un vacío.
+- The canned intents are bilingual on the trigger (the human can type in
+  either language) and English in the reply: `acarici*|caricia|pet|scratch`,
+  `churu*|atún|comida|tuna|food|feed`, `cómo estás|how are you|what's up`,
+  `qué haces|what do you do`. They are answered without spending tokens.
+- The model chain lives in `Voice.chat`: for the `chat` task it tries the
+  assigned model and then `chatModelFallbacks`. Each link absorbs upstream
+  429s and empty replies from models that reason.
+- The cat's previous opinion travels inside the user prompt, not as an
+  `assistant` turn: injecting it as its own turn degraded the replies
+  (see [troubleshooting](../deployment/troubleshooting.md)).
+- If the whole chain fails, `tiredReply()` answers with character instead
+  of an empty string.
 
-## 3. Flujo de rumiación (opinión diaria)
+## 3. Rumination flow (daily opinion)
 
-Trigger: `Scheduler` al arrancar y luego cada hora; `shouldRuminate` solo
-deja pasar una rumiación por día natural.
+Trigger: the `Scheduler` at startup and then every hour; `shouldRuminate`
+only lets one rumination through per calendar day.
 
 ```
-Scheduler (cada 1 h) ──→ shouldRuminate ──→ ruminate(voice, input)
+Scheduler (every 1 h) ──→ shouldRuminate ──→ ruminate(voice, input)
                                                         │
                         ┌───────────────────────────────┘
                         ▼
-             prompt: regalos, caricias, sequía de caricias,
-             presupuesto restante, opinión anterior
+             prompt: gifts, purrs, purr drought,
+             remaining budget, previous opinion
                         │
                         ▼
-             memory.setOpinion(quote) ──→ se pinta en el altar
+             memory.setOpinion(quote) ──→ painted in the lair
 ```
 
-- `input.purrDrought` es los días desde la última caricia (`Memory.purrDrought`).
-- La confesión empieza siempre con el prefijo
-  `CONFESSION_PREFIX = "Mi opinión sobre mi humano:"` y evoluciona: hay
-  respuestas distintas para cero caricias, mayoría de tofus, GPUs entregadas
-  o una casa "demasiado limpia".
+- `input.purrDrought` is the days since the last purr (`Memory.purrDrought`).
+- The confession always starts with the prefix
+  `CONFESSION_PREFIX = "My opinion of my human:"` and evolves: there are
+  different replies for zero purrs, a majority of tofus, delivered GPUs,
+  or a house that's "too clean".
+- The deterministic template (`fallbackOpinion`, used when the cat is out
+  of voice) is singular/plural aware: "1 valuable thing" vs
+  "N valuable things".
 
-## Referencias
+## References
 
-- [Caza y dieta](../features/caza-y-dieta.md)
-- [Altar y chat](../features/altar-y-chat.md)
-- Archivos fuente: `src/hunt.ts`, `src/chat.ts`, `src/opinion.ts`, `src/scheduler.ts`
+- [Hunt and diet](../features/caza-y-dieta.md)
+- [The lair and chat](../features/altar-y-chat.md)
+- Source files: `src/hunt.ts`, `src/chat.ts`, `src/opinion.ts`, `src/scheduler.ts`

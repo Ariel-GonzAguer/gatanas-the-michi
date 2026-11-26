@@ -47,6 +47,9 @@ export interface GatanasMemory {
   /** Caricias acumuladas. Ningún gato sobrevive sin ellas. */
   purrs: number;
   lastPurrAt: string | null;
+  /** Churus recibidos. La moneda fuerte del cariño. */
+  churus: number;
+  lastChurusAt: string | null;
   /** Rondas de cacería. */
   hunts: number;
   lastHuntAt: string | null;
@@ -56,7 +59,7 @@ export interface GatanasMemory {
   lastWatchAt: string | null;
   /** Títulos que el narrador le ha ido regalando a quien mantiene el Sprite. */
   humanTitles: string[];
-  /** Lo que Gatanás confiesa en el altar. */
+  /** Lo que Gatanás confiesa en la guarida. */
   opinion: (Opinion & { tokens?: number }) | null;
   /** Consumo de tokens por día, para el presupuesto de OpenRouter. */
   tokensByDay: Record<string, number>;
@@ -78,6 +81,8 @@ const EMPTY = (name: string, lives = 9): GatanasMemory => ({
   checkpoints: [],
   purrs: 0,
   lastPurrAt: null,
+  churus: 0,
+  lastChurusAt: null,
   hunts: 0,
   lastHuntAt: null,
   lastHuntFound: 0,
@@ -136,7 +141,7 @@ export class Memory {
         kind: "born",
         id: "born",
         at: new Date().toISOString(),
-        reason: "Nació en un Sprite de Fly.io y maulló por primera vez.",
+        reason: "Born in a Fly.io Sprite and meowed for the first time.",
       });
       this.loaded = true;
       await this.save();
@@ -147,7 +152,7 @@ export class Memory {
   }
 
   get state(): GatanasMemory {
-    if (!this.loaded) throw new Error("El acta no ha sido leída todavía");
+    if (!this.loaded) throw new Error("The acta hasn't been read yet");
     return this.data;
   }
 
@@ -204,6 +209,12 @@ export class Memory {
     this.data.purrs += 1;
     this.data.lastPurrAt = new Date().toISOString();
     return this.data.purrs;
+  }
+
+  giveChurus(): number {
+    this.data.churus += 1;
+    this.data.lastChurusAt = new Date().toISOString();
+    return this.data.churus;
   }
 
   recordWatch(): void {

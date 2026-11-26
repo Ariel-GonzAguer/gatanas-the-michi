@@ -1,56 +1,67 @@
-# HTTP API — el altar y sus rutas
+# HTTP API — the lair and its routes
 
-El servidor (`src/altar-server.ts`) es un `http.Server` de la librería estándar
-que escucha en `PORT` (8080). El proxy del Sprite enruta la URL pública HTTPS
-a ese puerto.
+The server (`src/altar-server.ts`) is a standard-library `http.Server`
+listening on `PORT` (8080). The Sprite's proxy routes the public HTTPS URL
+to that port.
 
-## 1. Resumen
+## 1. Summary
 
-Dos familias de rutas: la página del altar (HTML) y la API JSON que consume el
-JS inline de esa misma página o cualquier cliente externo. Todas las respuestas
-JSON usan `Cache-Control: no-store` y el mismo bloque de cabeceras de
-seguridad.
+Two families of routes: the lair page (HTML) and the JSON API consumed by
+that same page's inline JS or by any external client. All JSON responses
+use `Cache-Control: no-store` and the same block of security headers.
 
-## 2. Rutas
+## 2. Routes
 
-| Método | Ruta | Handler | Descripción |
+| Method | Route | Handler | Description |
 |--------|------|---------|-------------|
-| GET | `/` y `/altar` | página del altar | HTML completo con opinión, regalos, cifras y chat. |
-| GET | `/robots.txt` | texto plano | `Disallow: /api/` para todo user-agent. |
-| GET | `/api/status` | JSON | Estado: vivo, despierto, vidas, caricias, cacerías, regalos, monedero, opinión. |
-| GET | `/api/gifts` | JSON | Los 50 regalos más recientes del altar. |
-| GET | `/api/lives` | JSON | Estado de `NineLives`: vidas restantes, checkpoints, eventos. |
-| POST | `/api/chat` | JSON | Hablarle al gato. Body: `{"message": "..."}` (máx. 1200 chars tras recorte). |
-| POST | `/api/purr` | JSON | Acariciarlo: incrementa el contador persistente. |
-| POST | `/api/hunt` | JSON | Una ronda de cacería inmediata. Devuelve el outcome completo. |
-| POST | `/api/revive` | JSON | Tirarse de la mesa y revivir. Body opcional: `{"reason": "..."}`. Alias: `/api/nahualada`. |
+| GET | `/` (aliases `/altar` and `/guarida`) | the lair page | Full HTML with opinion, gifts, figures, and chat. |
+| GET | `/robots.txt` | plain text | `Disallow: /api/` for every user-agent. |
+| GET | `/api/status` | JSON | State: alive, awake, lives, purrs, churus, hunts, gifts, wallet, opinion. |
+| GET | `/api/gifts` | JSON | The 50 most recent gifts in the lair. |
+| GET | `/api/lives` | JSON | `NineLives` state: lives remaining, checkpoints, events. |
+| POST | `/api/chat` | JSON | Talk to the cat. Body: `{"message": "..."}` (max. 1200 chars after trimming). |
+| POST | `/api/purr` | JSON | Pet the cat: increments the persistent counter. |
+| POST | `/api/churus` | JSON | Give the cat a churu: increments the persistent counter and answers with the deterministic `churusReply()` from `src/narrate.ts`. |
+| POST | `/api/hunt` | JSON | One immediate hunt round. Returns the full outcome. |
+| POST | `/api/revive` | JSON | Knock everything off the table and revive. Optional body: `{"reason": "..."}`. Alias: `/api/nahualada`. |
 
-### Errores
+The lair page itself ends with a `How does this site work?`
+(`details`/`summary`) section: the single-file HTML served by `node:http`,
+the acta on the Sprite's persistent disk, the hunt cycle, the chat path
+(Sprites connector gateway → OpenRouter, `:free` models with a paid
+fallback), the per-minute rate limits, no cookies or trackers, and
+HTML-escaped dynamic output. While the model generates, the chat thread
+(`aria-live="polite"`) shows a typing indicator — "Gatanás is thinking
+about what to meow back…". No streaming: the reply arrives complete, with
+a cat's manners.
 
-| Estado | Cuándo | Cuerpo |
+### Errors
+
+| Status | When | Body |
 |--------|--------|--------|
-| 400 | body JSON inválido en `/api/chat` | `{"reply": "Eso no fue un maullido válido."}` |
-| 429 | limitador de golpes excedido | `{"reply": "..."}` con el motivo |
-| 500 | excepción no controlada | `{"reply": "Me atraganté con algo. Volvé a intentar. prrrr."}` |
-| 404 | ruta desconocida | `{"reply": "Aquí no hay nada. Ni una caja. miau."}` |
+| 400 | invalid JSON body in `/api/chat` | `{"reply": "That wasn't a valid meow."}` |
+| 429 | rate limit exceeded | `{"reply": "..."}` with the reason |
+| 500 | unhandled exception | `{"reply": "I choked on something. Try again. prrrr."}` |
+| 404 | unknown route | `{"reply": "Nothing here. Not even a box. meow."}` |
 
-## 3. Limitadores de golpes
+## 3. Rate limiters
 
-`limiter(n)` mantiene una ventana deslizante de 60 s por ruta:
+`limiter(n)` keeps a 60 s sliding window per route:
 
-| Ruta | Golpes por minuto |
+| Route | Hits per minute |
 |------|-------------------|
 | `/api/chat` | 20 |
 | `/api/purr` | 30 |
+| `/api/churus` | 30 |
 | `/api/hunt` | 3 |
 | `/api/revive` | 3 |
 
-El body de peticiones POST se lee con tope de 64 KiB (`readBody`); si se
-excede, la conexión se corta.
+The body of POST requests is read with a 64 KiB cap (`readBody`); exceeding
+it cuts the connection.
 
-## 4. Cabeceras de seguridad
+## 4. Security headers
 
-Todas las respuestas JSON y el HTML comparten:
+All JSON responses and the HTML share:
 
 ```
 X-Content-Type-Options: nosniff
@@ -61,21 +72,21 @@ Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline';
   form-action 'none'; base-uri 'none'; frame-ancestors 'none'
 ```
 
-La CSP permite exactamente lo que la página usa: CSS y JS inline (la página
-no tiene archivos externos) e imágenes `data:` (el favicon SVG). Ver
-[implementación de seguridad](../security/implementation.md).
+The CSP allows exactly what the page uses: inline CSS and JS (the page has
+no external files) and `data:` images (the SVG favicon). See
+[security implementation](../security/implementation.md).
 
-## 5. Problemas comunes
+## 5. Common problems
 
-- El proxy del Sprite puede responder 502 si un handler excede su ventana de
-  tiempo (pasa con modelos lentos en `/api/chat`): ver
+- The Sprite's proxy may answer 502 if a handler exceeds its time window
+  (it happens with slow models on `/api/chat`): see
   [troubleshooting](../deployment/troubleshooting.md).
-- `/api/hunt` devuelve `ran: false` con `reason` cuando el monedero no
-  autoriza gasto: no es un error, es el gato ayunando.
+- `/api/hunt` returns `ran: false` with a `reason` when the wallet doesn't
+  authorize spend: it's not an error, it's the cat fasting.
 
-## Referencias
+## References
 
-- [Altar y chat](../features/altar-y-chat.md)
-- [Flujos de datos](data-flow.md)
-- Archivo fuente: `src/altar-server.ts`
-- Página servida: `src/altar.ts`
+- [The lair and chat](../features/altar-y-chat.md)
+- [Data flows](data-flow.md)
+- Source file: `src/altar-server.ts`
+- Page served: `src/altar.ts`

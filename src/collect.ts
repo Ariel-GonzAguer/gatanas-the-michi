@@ -104,7 +104,7 @@ export async function collectLocalPrey(deps: CollectDeps, options: CollectOption
     const state = rest[0];
     const startTicks = Number(rest[19]);
     let comm = stat.slice(stat.indexOf("(") + 1, stat.lastIndexOf(")"));
-    if (!comm) comm = "algo";
+    if (!comm) comm = "something";
     const commShort = comm.slice(0, 40);
 
     if (state === "Z") {
@@ -113,8 +113,8 @@ export async function collectLocalPrey(deps: CollectDeps, options: CollectOption
           now,
           "process",
           o.host,
-          `proceso zombi ${commShort}`,
-          `pid ${pid} estado Z (defunct) — no muere ni respira.`,
+          `zombie process ${commShort}`,
+          `pid ${pid} state Z (defunct) — neither dies nor breathes.`,
         ),
       );
       continue;
@@ -152,8 +152,8 @@ export async function collectLocalPrey(deps: CollectDeps, options: CollectOption
             now,
             "disk",
             o.host,
-            `disco al ${usedPct.toFixed(1)}%`,
-            `Quedan ${(s.free / 1e9).toFixed(2)} GB libres de ${(s.total / 1e9).toFixed(2)} GB en ${dev}.`,
+            `disk at ${usedPct.toFixed(1)}%`,
+            `${(s.free / 1e9).toFixed(2)} GB free of ${(s.total / 1e9).toFixed(2)} GB left on ${dev}.`,
           ),
         );
       }
@@ -176,7 +176,7 @@ export async function collectLocalPrey(deps: CollectDeps, options: CollectOption
         const raw = await deps.readFile(path.join(svcRoot, svc.name)).catch(() => "");
         if (/"status"\s*:\s*"stopped"/.test(raw)) {
           out.push(
-            makePrey(now, "service", o.host, `servicio ${svcName} detenido`, raw.slice(0, 2000)),
+            makePrey(now, "service", o.host, `service ${svcName} stopped`, raw.slice(0, 2000)),
           );
         }
         continue;
@@ -192,8 +192,8 @@ export async function collectLocalPrey(deps: CollectDeps, options: CollectOption
           now,
           "log",
           o.host,
-          `log ${svcName} gigante (${(st.size / 1024 / 1024).toFixed(1)} MB)`,
-          `El archivo ${svc.name} pesa ${st.size} bytes y su última escritura fue ${new Date(st.mtimeMs).toISOString()}.`,
+          `huge ${svcName} log (${(st.size / 1024 / 1024).toFixed(1)} MB)`,
+          `File ${svc.name} weighs ${st.size} bytes and its last write was ${new Date(st.mtimeMs).toISOString()}.`,
         ),
       );
     }
@@ -229,7 +229,7 @@ export async function collectLocalPrey(deps: CollectDeps, options: CollectOption
           now,
           "log",
           o.host,
-          `errores frescos en ${e.name}`,
+          `fresh errors in ${e.name}`,
           errors.slice(-8).join("\n").slice(0, 4000),
         ),
       );
@@ -257,7 +257,7 @@ export async function collectLocalPrey(deps: CollectDeps, options: CollectOption
           now,
           "log",
           o.host,
-          `errores frescos en ${log.name}`,
+          `fresh errors in ${log.name}`,
           errors.slice(-8).join("\n").slice(0, 4000),
         ),
       );
@@ -286,8 +286,8 @@ export async function collectLocalPrey(deps: CollectDeps, options: CollectOption
         now,
         "arena",
         o.host,
-        `caja de arena (${tmpDir}) llena`,
-        `${(tmpBytes / 1024 / 1024).toFixed(0)} MB en archivos sueltos de ${tmpCount} entradas.`,
+        `litter box (${tmpDir}) full`,
+        `${(tmpBytes / 1024 / 1024).toFixed(0)} MB across loose files in ${tmpCount} entries.`,
       ),
     );
   }
@@ -296,7 +296,7 @@ export async function collectLocalPrey(deps: CollectDeps, options: CollectOption
   const acta = path.join(homeDir, ".gatanas", "memory.json");
   const actaStat = await deps.stat(acta).catch(() => null);
   if (actaStat && actaStat.size > 4 * 1024 * 1024) {
-    out.push(makePrey(now, "disk", o.host, "acta del gato gorda", `memory.json pesa ${actaStat.size} bytes.`));
+    out.push(makePrey(now, "disk", o.host, "fat acta (memory.json)", `memory.json weighs ${actaStat.size} bytes.`));
   }
 
   return out;

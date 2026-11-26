@@ -23,20 +23,20 @@ async function fresh(): Promise<{ memory: Memory; lives: NineLives }> {
   return { memory, lives };
 }
 
-test("nace con nueve vidas", async () => {
+test("is born with nine lives", async () => {
   const { lives } = await fresh();
   assert.equal(lives.state.livesRemaining, 9);
 });
 
-test("tirar algo de la mesa cuesta una vida", async () => {
+test("knocking something off the table costs a life", async () => {
   const { lives } = await fresh();
-  const ev = await lives.loseLife("tiró una taza");
+  const ev = await lives.loseLife("knocked a cup");
   assert.ok(ev);
   assert.equal(lives.state.livesRemaining, 8);
-  assert.match(NineLives.narrative(ev!), /tiró algo/);
+  assert.match(NineLives.narrative(ev!), /knocked something off the table/);
 });
 
-test("gastar una vida restaura el checkpoint y registra el evento", async () => {
+test("spending a life restores the checkpoint and records the event", async () => {
   const { lives, memory } = await fresh();
   const cp = await lives.takeCheckpoint("antes de la demo");
   assert.ok(cp);
@@ -48,7 +48,7 @@ test("gastar una vida restaura el checkpoint y registra el evento", async () => 
   assert.ok(memory.state.checkpoints.some((c) => c.id === cp!.id));
 });
 
-test("si la restauración falla, la vida se devuelve", async () => {
+test("if the restoration fails, the life is given back", async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "gatanas-lives-fail-"));
   const cfg = loadConfig({ home: dir, lives: 9 });
   const memory = new Memory(path.join(dir, "memory.json"), "Gatanás The Michi");
@@ -59,7 +59,7 @@ test("si la restauración falla, la vida se devuelve", async () => {
   assert.equal(lives.state.livesRemaining, 9, "no hay vida para quien no revive");
 });
 
-test("sin llave del plano de control no hay restauración", async () => {
+test("without the control-plane key there is no restoration", async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "gatanas-lives-nokey-"));
   const cfg = loadConfig({ home: dir, lives: 9 });
   const memory = new Memory(path.join(dir, "memory.json"), "Gatanás The Michi");
@@ -69,7 +69,7 @@ test("sin llave del plano de control no hay restauración", async () => {
   assert.equal(await lives.takeCheckpoint("sin llave"), null);
 });
 
-test("renacer devuelve las nueve vidas y no borra los regalos", async () => {
+test("reincarnating gives back the nine lives and does not erase the gifts", async () => {
   const { lives, memory } = await fresh();
   memory.addGift({
     id: "g1",
@@ -84,8 +84,8 @@ test("renacer devuelve las nueve vidas y no borra los regalos", async () => {
     at: new Date().toISOString(),
   });
   await lives.loseLife("error");
-  const ev = await lives.reincarnate("recargó la arena");
+  const ev = await lives.reincarnate("refilled the litter");
   assert.equal(lives.state.livesRemaining, 9);
   assert.equal(memory.state.gifts.length, 1);
-  assert.match(NineLives.narrative(ev), /Nueve vidas/);
+  assert.match(NineLives.narrative(ev), /Nine brand-new lives/);
 });

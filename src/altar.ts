@@ -1,14 +1,14 @@
 /**
- * El altar de regalos: la página que sirve el Sprite en su URL.
+ * La guarida de regalos: la página que sirve el Sprite en su URL.
  *
  * Estética: gato callejero, servidor viejo, noche. Sin frameworks, sin CDNs,
  * sin build: una sola página HTML con su CSS y su JS. El gato lo revisa desde
- * el chat, no con formularios.
+ * el chat, no con formularios. Todo lo visible está en inglés para los jueces;
+ * el navegador lo traduce nativamente a cualquier otro idioma.
  */
 import type { Gift } from "./prey.js";
 import { giftGlyph, giftLabel } from "./prey.js";
 import type { GatanasMemory } from "./memory.js";
-import { titleFor, TREAT_PUZZLE } from "./opinion.js";
 import { NineLives } from "./lives.js";
 
 export interface AltarSnapshot {
@@ -31,17 +31,16 @@ export function altarHtml(s: AltarSnapshot): string {
   const gpus = living.filter((g) => g.kind === "gpu").length;
   const tofu = living.filter((g) => g.kind === "tofu").length;
   const leaves = living.filter((g) => g.kind === "leaf").length;
-  const title = titleFor(s.memory, s.purrDrought);
 
   return `<!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(s.name)} · el altar de regalos</title>
-<meta name="description" content="Un gato callejero vive en un Sprite de Fly.io y te trae regalos de valor dudoso.">
-<meta property="og:title" content="${esc(s.name)} · el altar de regalos">
-<meta property="og:description" content="${esc(s.memory.opinion?.quote ?? "El gato aún te mira sin opinar.")}">
+<title>${esc(s.name)} · the lair of gifts</title>
+<meta name="description" content="A street cat lives inside a Fly.io Sprite and brings you gifts of dubious value.">
+<meta property="og:title" content="${esc(s.name)} · the lair of gifts">
+<meta property="og:description" content="${esc(s.memory.opinion?.quote ?? "The cat still watches you without an opinion.")}">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,${encodeURIComponent(CAT_FAVICON)}">
 <style>${CSS}</style>
@@ -51,54 +50,92 @@ export function altarHtml(s: AltarSnapshot): string {
   <header class="masthead">
     <div class="catface" aria-hidden="true">${cat}</div>
     <h1>${esc(s.name)}</h1>
-    <p class="tagline">Hola, soy ${esc(s.name)}. Vivo dentro de este Sprite. Cazo de noche y te traigo regalos de valor dudoso. Estás viendo mi altar.</p>
+    <p class="tagline">Hi, I'm ${esc(s.name)}. I live inside this Sprite. I hunt at night and bring you gifts of dubious value. You're looking at my lair.</p>
     <p class="status ${s.alive ? "ok" : "bad"}">
       ${s.alive
         ? s.awake
-          ? "el gato está aquí, vigilando"
-          : "el gato duerme. el Sprite duerme. todo en orden"
-        : "el gato está en trance: se está restaurando desde una de sus vidas"}
+          ? "the cat is here, watching"
+          : "the cat sleeps. the Sprite sleeps. all in order"
+        : "the cat is in a trance: it's being restored from one of its lives"}
       <span class="dot"></span>
     </p>
-    <p class="human">Título honorífico: <strong>${esc(title)}</strong></p>
   </header>
 
-  <section class="opinion" aria-label="La opinión del gato sobre ti">
-    <h2>Mi opinión sobre mi humano</h2>
-    <p>${s.memory.opinion ? esc(s.memory.opinion.quote) : "Este humano todavía no me ha dado motivos para opinar. Eso es, de hecho, una opinión."}</p>
+  <section class="opinion" aria-label="The cat's opinion of you">
+    <h2>My opinion of my human</h2>
+    <p>${s.memory.opinion ? esc(s.memory.opinion.quote) : "This human hasn't given me reasons to opine yet. Which is, in fact, an opinion."}</p>
   </section>
 
-  <section class="altar" aria-label="El altar de regalos">
-    <h2>El altar</h2>
+  <section class="guarida" aria-label="The lair of gifts">
+    <h2>The lair</h2>
     ${living.length === 0 ? emptyAltar(s) : living.slice(0, 30).map(giftCard).join("\n")}
   </section>
 
-  <section class="stats" aria-label="Cifras del gato">
-    <div><span class="n">${s.lives}</span><span class="l">vidas</span></div>
-    <div><span class="n">${s.memory.purrs}</span><span class="l">caricias</span></div>
-    <div><span class="n">${s.memory.hunts}</span><span class="l">rondas de cacería</span></div>
-    <div><span class="n">${gpus}</span><span class="l">GPUs encontradas</span></div>
-    <div><span class="n">${tofu}</span><span class="l">tofus fermentados</span></div>
-    <div><span class="n">${leaves}</span><span class="l">hojas de árbol</span></div>
+  <section class="stats" aria-label="The cat's figures">
+    <div><span class="n">${s.lives}</span><span class="l">lives</span></div>
+    <div><span class="n" id="st-purrs">${s.memory.purrs}</span><span class="l">pets</span></div>
+    <div><span class="n" id="st-churus">${s.memory.churus}</span><span class="l">churus</span></div>
+    <div><span class="n">${s.memory.hunts}</span><span class="l">hunt rounds</span></div>
+    <div><span class="n">${gpus}</span><span class="l">GPUs found</span></div>
+    <div><span class="n">${tofu}</span><span class="l">fermented tofus</span></div>
+    <div><span class="n">${leaves}</span><span class="l">tree leaves</span></div>
   </section>
 
-  <section class="chat" aria-label="Habla con el gato">
-    <h2>Hablarle al gato</h2>
-    <div id="hilo" class="fila"></div>
+  <section class="chat" aria-label="Talk to the cat">
+    <h2>Talk to the cat</h2>
+    <div id="hilo" class="fila" aria-live="polite"></div>
     <form id="form" autocomplete="off">
-      <label class="sr" for="msg">Tu mensaje</label>
-      <textarea id="msg" rows="2" maxlength="1200" placeholder="Decile algo. No muerde, pero tampoco perdona." required></textarea>
+      <label class="sr" for="msg">Your message</label>
+      <textarea id="msg" rows="2" maxlength="1200" placeholder="Say something to it. It doesn't bite, but it doesn't forgive either." required></textarea>
       <div class="botonera">
-        <button type="submit">Maullar</button>
-        <button type="button" id="purr" class="sec">Acariciar</button>
+        <button type="submit">Meow</button>
+        <button type="button" id="churus" class="sec">Give churu</button>
+        <button type="button" id="purr" class="sec">Pet</button>
       </div>
     </form>
-    <p class="disclaimer">${esc(TREAT_PUZZLE(s.purrDrought))}</p>
   </section>
 
+  <details class="how">
+    <summary>How does this site work?</summary>
+    <div class="how-body">
+      <p>This page is a single HTML file with its CSS and JS inside, served by
+      the standard library's <code>node:http</code>. No frameworks, no CDNs, no
+      build, no cookies and no trackers: everything you see is generated by the
+      same Node process that is the cat.</p>
+      <p>The data comes from the cat's <strong>acta</strong> (<code>memory.json</code>),
+      a small JSON file on the Sprite's persistent disk: gifts, pets, churus,
+      lives and its opinion of you. The disk survives the Sprite's naps, so the
+      cat wakes up remembering everything.</p>
+      <p>What happens behind the scenes:</p>
+      <ul>
+        <li>Every <code>GATANAS_HUNT_INTERVAL_SEC</code> (15 min by default) the cat
+        patrols its house: zombie processes, disk, services and logs. The diet
+        decides the gift (GPU, tofu or leaf) with fixed rules; the LLM only
+        narrates it.</li>
+        <li>The chat travels through the <strong>Sprites connector gateway</strong> to
+        OpenRouter (<code>:free</code> models with a paid fallback). The key never
+        reaches the cat; the wallet watches the spend and makes it fast if it
+        gets close to the cap.</li>
+        <li>While the model thinks, you see <em>“Gatanás is thinking about what to
+        meow back…”</em>. There is no streaming: the answer arrives whole, with
+        the manners of a cat.</li>
+      </ul>
+      <p>The JSON API, in case you want to talk to it without the page:</p>
+      <ul>
+        <li><code>GET /api/status</code> · <code>GET /api/gifts</code> · <code>GET /api/lives</code></li>
+        <li><code>POST /api/chat</code> <code>{"message":"..."}</code> ·
+        <code>POST /api/purr</code> · <code>POST /api/churus</code> ·
+        <code>POST /api/hunt</code> · <code>POST /api/revive</code></li>
+      </ul>
+      <p>The write routes have per-minute rate limits: a cat tolerates very
+      little traffic. Everything dynamic is HTML-escaped, including what the
+      model writes.</p>
+    </div>
+  </details>
+
   <footer>
-    <p>Corre en <a href="https://fly.io/sprites">Fly.io Sprites</a> · habla por el gateway de conectores de Sprites (OpenRouter) · guarda su acta en su propio disco.</p>
-    <p class="pico">${esc(s.name)} · vidas: ${s.lives} · última ronda: ${s.memory.lastHuntAt ? esc(timeAgo(s.memory.lastHuntAt, s.now)) : "nunca"} · despierto desde ${s.lastWatchAt ? esc(timeAgo(s.lastWatchAt, s.now)) : "que nació"}</p>
+    <p>Runs on <a href="https://fly.io/sprites">Fly.io Sprites</a> · talks through the Sprites connector gateway (OpenRouter) · keeps its acta on its own disk.</p>
+    <p class="pico">${esc(s.name)} · lives: ${s.lives} · last hunt: ${s.memory.lastHuntAt ? esc(timeAgo(s.memory.lastHuntAt, s.now)) : "never"} · awake since ${s.lastWatchAt ? esc(timeAgo(s.lastWatchAt, s.now)) : "it was born"}</p>
   </footer>
 </main>
 <script>${JS}</script>
@@ -112,15 +149,15 @@ function giftCard(g: Gift): string {
       <div class="body">
         <h3>${esc(giftLabel(g.kind))}</h3>
     <p class="narration">${esc(g.narration)}</p>
-    <p class="meta">cazado ${esc(g.preyTitle)} · ${esc(timeAgo(g.at, new Date().toISOString()))}</p>
-    ${g.kind !== "leaf" ? `<p class="advice">Disección: ${esc(g.advice)}</p>` : ""}
+    <p class="meta">hunted ${esc(g.preyTitle)} · ${esc(timeAgo(g.at, new Date().toISOString()))}</p>
+    ${g.kind !== "leaf" ? `<p class="advice">Dissection: ${esc(g.advice)}</p>` : ""}
   </div>
 </article>`;
 }
 
 function emptyAltar(s: AltarSnapshot): string {
-  return `<p class="empty">El altar está vacío. El gato está en su primera noche de cacería. Volvé en un rato, o llamalo por el chat a ver si encuentra algo.</p>
-<p class="empty small">Mientras esperás: este Sprite lleva ${s.memory.watches} vigilias. Cada vigilia es un meow. Nadie los escucha, pero ahí quedan.</p>`;
+  return `<p class="empty">The lair is empty. The cat is in its first night of hunting. Come back in a while, or call it on the chat to see if it finds something.</p>
+<p class="empty small">Meanwhile: this Sprite has ${s.memory.watches} watches. Every watch is a meow. Nobody hears them, but there they stay.</p>`;
 }
 
 function esc(s: string): string {
@@ -134,24 +171,27 @@ function esc(s: string): string {
 
 function timeAgo(iso: string, nowIso: string): string {
   const diff = (Date.parse(nowIso) - Date.parse(iso)) / 1000;
-  if (!Number.isFinite(diff)) return "en un tiempo raro";
-  if (diff < 60) return "hace segundos";
-  if (diff < 3600) return `hace ${Math.round(diff / 60)} min`;
-  if (diff < 86400) return `hace ${Math.round(diff / 3600)} h`;
-  return `hace ${Math.round(diff / 86400)} días`;
+  if (!Number.isFinite(diff)) return "in a strange amount of time";
+  if (diff < 60) return "seconds ago";
+  const mins = Math.round(diff / 60);
+  if (diff < 3600) return `${mins} min ago`;
+  const hours = Math.round(diff / 3600);
+  if (diff < 86400) return `${hours} h ago`;
+  const days = Math.round(diff / 86400);
+  return `${days} ${days === 1 ? "day" : "days"} ago`;
 }
 
-const CAT_AWAKE = `<pre class="art">  /\\_/\\    <span class="eye">o.o</span>
- (  ^  )   Gatanás, despierto
-  &gt; ^ &lt;</pre>`;
+const CAT_AWAKE = `<pre class="art"> /\\_/\\
+( <span class="eye">o.o</span> )   Gatanás, awake
+ &gt; ^ &lt;</pre>`;
 
-const CAT_SLEEP = `<pre class="art">  /\\_/\\
- ( -.- )   zZz
-  &gt; ^ &lt;</pre>`;
+const CAT_SLEEP = `<pre class="art"> /\\_/\\
+( -.- )   zZz
+ &gt; ^ &lt;</pre>`;
 
-const CAT_TRANCE = `<pre class="art">  /\\_/\\
- ( x.x )   nahualada
-  &gt; ^ &lt;</pre>`;
+const CAT_TRANCE = `<pre class="art"> /\\_/\\
+( x.x )   reviving
+ &gt; ^ &lt;</pre>`;
 
 const CAT_FAVICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐈‍⬛</text></svg>`;
 
@@ -175,7 +215,7 @@ h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.22em;color:var(--dim
 .human{font-size:.85rem;color:var(--dim)}
 .opinion{border-left:3px solid var(--gpu);padding:4px 0 4px 18px;margin:40px 0}
 .opinion p{font-size:1.05rem;font-style:italic;margin:0}
-.altar{margin:48px 0}
+.guarida{margin:48px 0}
 .gift{display:grid;grid-template-columns:3rem 1fr;gap:14px;border:1px solid var(--line);border-radius:6px;padding:16px;margin-bottom:12px;background:#0f0c0b}
 .gift .emoji{line-height:1;align-self:start}
 .glyph{width:40px;height:40px;display:block}
@@ -197,19 +237,27 @@ h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.22em;color:var(--dim
 .turn{border:1px solid var(--line);border-radius:6px;padding:10px 14px;max-width:92%}
 .turn.user{align-self:flex-end;background:#171210;color:var(--dim)}
 .turn.cat{align-self:flex-start;background:#0f1410}
+.pensando{color:var(--dim);font-style:italic;animation:pulse 1.4s infinite}
 form{display:flex;flex-direction:column;gap:10px}
 textarea{width:100%;background:#0f0c0b;border:1px solid var(--line);color:var(--ink);font:inherit;padding:12px;border-radius:6px;resize:vertical}
 textarea:focus,input:focus,button:focus{outline:2px solid var(--gpu);outline-offset:2px}
-.botonera{display:flex;gap:10px}
+.botonera{display:flex;gap:10px;flex-wrap:wrap}
 button{font:inherit;background:var(--gpu);color:#0b0908;border:0;border-radius:6px;padding:10px 18px;cursor:pointer;font-weight:600}
 button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
 button:hover{filter:brightness(1.1)}
 button[disabled]{opacity:.5;cursor:wait}
 .disclaimer{font-size:.8rem;color:var(--dim)}
+.how{margin:40px 0;border-top:1px solid var(--line);padding-top:18px;font-size:.85rem;color:var(--dim)}
+.how summary{cursor:pointer;color:var(--ink);font-size:.9rem;font-weight:600}
+.how summary:focus{outline:2px solid var(--gpu);outline-offset:2px}
+.how-body p{margin:12px 0}
+.how-body ul{margin:10px 0;padding-left:20px}
+.how-body li{margin:4px 0}
+.how code{background:#171210;padding:1px 5px;border-radius:4px}
 footer{margin-top:56px;border-top:1px solid var(--line);padding-top:18px;font-size:.78rem;color:var(--dim)}
 a{color:var(--tofu)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-@media (prefers-reduced-motion:reduce){.dot{animation:none}}
+@media (prefers-reduced-motion:reduce){.dot,.pensando{animation:none}}
 `;
 
 const JS = `
@@ -217,6 +265,8 @@ const hilo=document.getElementById('hilo');
 const form=document.getElementById('form');
 const msg=document.getElementById('msg');
 const purr=document.getElementById('purr');
+const churus=document.getElementById('churus');
+let pensando=null;
 function turn(who,text){
   const d=document.createElement('div');
   d.className='turn '+who;
@@ -224,9 +274,20 @@ function turn(who,text){
   hilo.appendChild(d);
   d.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
+function pensar(){
+  if(pensando)return;
+  pensando=document.createElement('div');
+  pensando.className='turn cat pensando';
+  pensando.textContent='Gatanás is thinking about what to meow back…';
+  hilo.appendChild(pensando);
+  pensando.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+function callar(){
+  if(pensando){pensando.remove();pensando=null;}
+}
 async function post(url,body){
   const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});
-  const j=await r.json().catch(()=>({reply:'mrrp (error de cable)'}));
+  const j=await r.json().catch(()=>({reply:'prrrr (cable error)'}));
   return j;
 }
 form.addEventListener('submit',async e=>{
@@ -236,16 +297,24 @@ form.addEventListener('submit',async e=>{
   turn('user',text);
   msg.value='';
   form.querySelector('button[type=submit]').disabled=true;
+  pensar();
   try{
     const j=await post('/api/chat',{message:text});
-    turn('cat',j.reply||'mrrp.');
-  }catch{ turn('cat','No me oigo a mí mismo. Prueba otra vez.'); }
+    callar();
+    turn('cat',j.reply||'prrrr.');
+  }catch{ callar(); turn('cat','I can\\'t hear myself. Try again.'); }
   finally{ form.querySelector('button[type=submit]').disabled=false; }
 });
 purr.addEventListener('click',async()=>{
   purr.disabled=true;
-  try{ const j=await post('/api/purr'); turn('cat',j.reply||'Prrrr.'); document.querySelectorAll('.stats .n')[1].textContent=j.purrs; }
-  catch{ turn('cat','Me hiciste una caricia al aire. miau.'); }
+  try{ const j=await post('/api/purr'); turn('cat',j.reply||'Prrrr.'); const el=document.getElementById('st-purrs'); if(el&&typeof j.purrs==='number')el.textContent=j.purrs; }
+  catch{ turn('cat','You petted the air. miau.'); }
   finally{ purr.disabled=false; }
+});
+churus.addEventListener('click',async()=>{
+  churus.disabled=true;
+  try{ const j=await post('/api/churus'); turn('cat',j.reply||'prrrr.'); const el=document.getElementById('st-churus'); if(el&&typeof j.churus==='number')el.textContent=j.churus; }
+  catch{ turn('cat','The churu stayed in the air. miau.'); }
+  finally{ churus.disabled=false; }
 });
 `;

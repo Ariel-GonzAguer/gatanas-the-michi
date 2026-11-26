@@ -4,12 +4,13 @@
  * Es un `http` de la librería estándar en el puerto que el proxy del Sprite
  * enruta a su URL HTTPS. Rutas:
  *
- *   GET  /                 el altar (página completa)
+ *   GET  /                 la guarida (página completa; alias: /altar y /guarida)
  *   GET  /api/status       estado del gato en JSON
- *   GET  /api/gifts        los regalos del altar
+ *   GET  /api/gifts        los regalos de la guarida
  *   GET  /api/lives        vidas y checkpoints
  *   POST /api/chat         hablarle al gato { message }
  *   POST /api/purr         acariciarlo
+ *   POST /api/churus       darle un churu
  *   POST /api/hunt         mandarlo a cazar ahora
  *   POST /api/revive       tirarse de la mesa y revivir (alias: /api/nahualada)
  *
@@ -19,6 +20,7 @@ import { createServer as createHttpServer } from "node:http";
 import type { ServerResponse, IncomingMessage, Server } from "node:http";
 import { altarHtml, type AltarSnapshot } from "./altar.js";
 import { speak } from "./chat.js";
+import { churusReply } from "./narrate.js";
 import type { GatanasConfig } from "./config.js";
 import type { NineLives } from "./lives.js";
 import type { Memory } from "./memory.js";
@@ -87,13 +89,14 @@ function limiter(maxPerMinute: number): () => boolean {
 export function createServer(deps: ServerDeps): Server {
   const chatLimit = limiter(20);
   const purrLimit = limiter(30);
+  const churusLimit = limiter(30);
   const huntLimit = limiter(3);
   const lifeLimit = limiter(3);
 
   return createHttpServer(async (req, res) => {
     const url = new URL(req.url ?? "/", "http://gatanas.local");
     try {
-      if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/altar")) {
+      if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/altar" || url.pathname === "/guarida")) {
         const m = deps.memory.state;
         const snapshot: AltarSnapshot = {
           name: deps.cfg.name,
@@ -129,6 +132,7 @@ export function createServer(deps: ServerDeps): Server {
           awake: !deps.scheduler.inNahualada,
           lives: m.livesRemaining,
           purrs: m.purrs,
+          churus: m.churus,
           hunts: m.hunts,
           gifts: m.gifts.length,
           lastHuntAt: m.lastHuntAt,
@@ -151,7 +155,7 @@ export function createServer(deps: ServerDeps): Server {
 
       if (req.method === "POST" && url.pathname === "/api/chat") {
         if (!chatLimit()) {
-          json(res, 429, { reply: "Dejá de escribirme. Soy un gato, no un chatbot. miau." });
+          json(res, 429, { reply: "Stop writing me. I'm a cat, not a chatbot. miau." });
           return;
         }
         const body = await readBody(req);
@@ -159,11 +163,11 @@ export function createServer(deps: ServerDeps): Server {
         try {
           message = String((JSON.parse(body) as { message?: unknown }).message ?? "");
         } catch {
-          json(res, 400, { reply: "Eso no fue un maullido válido." });
+          json(res, 400, { reply: "That wasn't a valid meow." });
           return;
         }
         if (deps.scheduler.inNahualada) {
-          json(res, 200, { reply: "Estoy reviviendo. No me hablés ahora. mrrp." });
+          json(res, 200, { reply: "I'm reviving. Don't talk to me right now. prrrr." });
           return;
         }
         const reply = await speak(deps.voice, deps.memory.state, message.slice(0, 1200));
@@ -174,7 +178,7 @@ export function createServer(deps: ServerDeps): Server {
       if (req.method === "POST" && url.pathname === "/api/purr") {
         if (!purrLimit()) {
           json(res, 429, {
-            reply: "Prrrr. Suficiente por hoy. Ya te quejás de que no te trabajo.",
+            reply: "Prrrr. Enough for today. And you still complain I don't work.",
             purrs: deps.memory.state.purrs,
           });
           return;
@@ -185,29 +189,43 @@ export function createServer(deps: ServerDeps): Server {
           purrs: n,
           reply:
             n === 1
-              ? "Prrrr. Es la primera. No te acostumbres."
-              : `Prrrr. ${n} caricias. Sigo esperando el atún.`,
+              ? "Prrrr. That's the first one. Don't get used to it."
+              : `Prrrr. ${n} pets. Still waiting for the churus.`,
         });
+        return;
+      }
+
+      if (req.method === "POST" && url.pathname === "/api/churus") {
+        if (!churusLimit()) {
+          json(res, 429, {
+            reply: "Enough churus for now. A cat gets dizzy. prrrr.",
+            churus: deps.memory.state.churus,
+          });
+          return;
+        }
+        const n = deps.memory.giveChurus();
+        await deps.memory.save();
+        json(res, 200, { churus: n, reply: churusReply(n) });
         return;
       }
 
       if (req.method === "POST" && url.pathname === "/api/hunt") {
         if (!huntLimit()) {
-          json(res, 429, { reply: "El gato está cansado de cazar. Probá en un minuto." });
+          json(res, 429, { reply: "The cat is tired of hunting. Try again in a minute." });
           return;
         }
         if (!(await deps.huntAvailable())) {
-          json(res, 503, { reply: "No tengo llave para cazar en mi propia casa ahora. miau." });
+          json(res, 503, { reply: "I don't have the key to hunt inside my own house right now. miau." });
           return;
         }
         const out = await deps.scheduler.huntNow("request");
         json(res, 200, {
           reply:
             out === null
-              ? "Estoy reviviendo. No cazo ahora."
+              ? "I'm reviving. Not hunting right now."
               : out.ran
-                ? `Traje ${out.gifts.length} regalo(s) de ${out.found} hallazgo(s).`
-                : (out.reason ?? "No salió la cacería."),
+                ? `I brought ${out.gifts.length === 1 ? "1 gift" : `${out.gifts.length} gifts`} from ${out.found === 1 ? "1 finding" : `${out.found} findings`}.`
+                : (out.reason ?? "The hunt didn't happen."),
           outcome: out,
         });
         return;
@@ -218,11 +236,11 @@ export function createServer(deps: ServerDeps): Server {
         (url.pathname === "/api/revive" || url.pathname === "/api/nahualada")
       ) {
         if (!lifeLimit()) {
-          json(res, 429, { reply: "Un gato no muere tantas veces por minuto." });
+          json(res, 429, { reply: "A cat doesn't die that many times per minute." });
           return;
         }
         const body = await readBody(req);
-        let reason = "porque me diste la gana";
+        let reason = "because I felt like it";
         try {
           reason = (JSON.parse(body || "{}") as { reason?: string }).reason ?? reason;
         } catch {
@@ -233,10 +251,10 @@ export function createServer(deps: ServerDeps): Server {
         return;
       }
 
-      json(res, 404, { reply: "Aquí no hay nada. Ni una caja. miau." });
+      json(res, 404, { reply: "Nothing here. Not even a box. miau." });
     } catch (err) {
-      console.error("error en el altar:", err);
-      json(res, 500, { reply: "Me atraganté con algo. Volvé a intentar. mrrp." });
+      console.error("error in the lair:", err);
+      json(res, 500, { reply: "I choked on something. Try again. prrrr." });
     }
   });
 }

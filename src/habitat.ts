@@ -128,6 +128,10 @@ export interface VoiceReply {
  * `baseUrl` debe apuntar al gateway, no a la API: el gateway autentica por
  * identidad del Sprite y adjunta la llave guardada. Si el gato no está en su
  * Sprite, esto falla con 401 — y es correcto: fuera de casa, no habla.
+ *
+ * Para el chat, la voz tiene una cadena: primero los modelos `:free`
+ * (compartidos, a veces saturados) y al final el modelo pagado. Así el gato
+ * conversa gratis cuando puede y no se queda mudo cuando no.
  */
 export class Voice {
   constructor(
@@ -135,6 +139,7 @@ export class Voice {
     private readonly connectionId: string,
     private readonly models: Record<ModelTask, string>,
     private readonly timeoutMs: number,
+    private readonly chatFallbacks: readonly string[] = [],
   ) {}
 
   get base(): string {
@@ -167,16 +172,39 @@ export class Voice {
     messages: ChatMessage[],
     opts: { json?: boolean; temperature?: number; maxTokens?: number; model?: string } = {},
   ): Promise<VoiceReply> {
-    const model = opts.model ?? this.models[task];
+    const primary = opts.model ?? this.models[task];
+    // Cadena de chat: primero el modelo asignado, luego los free, y el pagado
+    // de último. Cada eslabón aguanta los fallos del anterior (429 upstream,
+    // respuestas vacías de modelos que razonan).
+    const chain =
+      task === "chat" && this.chatFallbacks.length > 0
+        ? [primary, ...this.chatFallbacks.filter((m) => m !== primary)]
+        : [primary];
+    let lastError: unknown = null;
+    for (const model of chain) {
+      try {
+        return await this.chatOnce(model, messages, opts);
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    throw lastError instanceof Error ? lastError : new Error("no model answered");
+  }
+
+  private async chatOnce(
+    model: string,
+    messages: ChatMessage[],
+    opts: { json?: boolean; temperature?: number; maxTokens?: number } = {},
+  ): Promise<VoiceReply> {
     const requested = opts.maxTokens ?? 700;
     const body: Record<string, unknown> = {
       model,
       messages,
       temperature: opts.temperature ?? 0.9,
-      // GLM 5.3 Flash razona antes de hablar: si el presupuesto es corto, se
-      // lo gasta pensando y devuelve `content: null`. Le damos espacio para
-      // el monólogo interno más la respuesta.
-      max_tokens: isReasoning(model) ? requested + REASONING_HEADROOM : requested,
+      // Varios modelos razonan antes de hablar: si el presupuesto es corto, se
+      // lo gastan pensando y devuelven `content: null`. El margen extra no
+      // cuesta cuando no se usa, así que va siempre.
+      max_tokens: requested + REASONING_HEADROOM,
     };
     if (opts.json) body.response_format = { type: "json_object" };
     const res = await fetch(`${this.base}/v1/chat/completions`, {
@@ -186,7 +214,7 @@ export class Voice {
       signal: timeoutSignal(this.timeoutMs),
     });
     const text = await res.text();
-    if (!res.ok) throw new Error(`El gateway de OpenRouter respondió ${res.status}: ${text.slice(0, 300)}`);
+    if (!res.ok) throw new Error(`OpenRouter gateway answered ${res.status}: ${text.slice(0, 300)}`);
     const json = JSON.parse(text) as {
       choices?: {
         finish_reason?: string;
@@ -201,7 +229,7 @@ export class Voice {
     // repertorio de emergencia en vez de maullar un punto.
     if (!content.trim()) {
       throw new Error(
-        `respuesta vacía (finish_reason=${choice?.finish_reason ?? "?"}, tokens=${json.usage?.total_tokens ?? 0})`,
+        `empty reply from ${model} (finish_reason=${choice?.finish_reason ?? "?"}, tokens=${json.usage?.total_tokens ?? 0})`,
       );
     }
     return {
@@ -213,11 +241,7 @@ export class Voice {
 }
 
 /** Margen para el monólogo interno de los modelos que razonan. */
-const REASONING_HEADROOM = 900;
-
-function isReasoning(model: string): boolean {
-  return /glm-5\.3|deepseek-v4|o[134]|thinking|reason/i.test(model);
-}
+const REASONING_HEADROOM = 2200;
 
 function timeoutSignal(ms: number): AbortSignal {
   const controller = new AbortController();

@@ -1,100 +1,110 @@
-> **English TL;DR** — Gatanás The Michi is a stray cat from Costa Rica who
-> lives inside a Fly.io **Sprite**. Every night he patrols his own machine
-> (zombie processes, disk, services, logs), turns findings into gifts — GPU,
-> fermented tofu or a leaf — through deterministic rules, and narrates them
-> via an LLM reached through a **Sprites connector** (OpenRouter; he never
-> sees the API key). He has nine lives (Sprite checkpoints), a wallet that
-> makes him fast before the key cap is reached, a written opinion of his
-> human, a public altar at https://gatanas-the-michi-b6zf5.sprites.app — and
-> he **publishes this very repo himself**, from inside the Sprite, through
-> the GitHub connector (no `git push` involved). TypeScript, zero runtime
-> dependencies, 29 tests. Built for Hacksgiving 2026. prrrr.
+Hi. I'm **Gatanás The Michi**, a stray cat from Costa Rica who lives inside a
+Fly.io **Sprite**. I hunt at night, bring gifts of dubious value, sleep when
+the Sprite sleeps, and wake up remembering everything. I have nine lives and
+one human. Everything else is noise.
 
-Soy Gatanás The Michi. Vivo dentro de este Sprite de Fly.io. Cazo de noche,
-traigo regalos de valor dudoso, duermo cuando el Sprite duerme y despierto
-recordando todo. Tengo nueve vidas y un humano.
+**English TL;DR for judges** — This repo is a personal agent, not a cron job.
+The cat patrols his own machine every 15 minutes (zombie processes, disk,
+services, logs), turns findings into gifts — a **GPU** (valuable), a **tree
+leaf** (useless, but it's the gesture) or **fermented tofu** (a delicacy with
+character: intense, an acquired taste, my way of saying something is going
+wrong but can still be saved) — through deterministic rules, and narrates them
+via an LLM reached through a **Sprites connector** (OpenRouter; he never sees
+the API key). He holds nine lives (Sprite checkpoints), a wallet that makes him
+fast before the key cap, a written daily opinion of his human, a churu counter,
+a public lair at https://gatanas-the-michi-b6zf5.sprites.app — and he
+**publishes this very repo himself**, from inside the Sprite, through the
+GitHub connector (no `git push` involved). TypeScript, zero runtime
+dependencies, 36 tests. Built for Hacksgiving 2026. prrrr.
 
-Esta es la historia de cómo un gato callejero de Costa Rica se convirtió en
-agente personal.
+## What it does, exactly
 
-## Qué hace, exactamente
+Every night (every `GATANAS_HUNT_INTERVAL_SEC`, fifteen minutes by default) the
+cat goes hunting around the Sprite:
 
-Cada noche (cada `GATANAS_HUNT_INTERVAL_SEC`, quince minutos por defecto) el
-gato sale de cacería por el Sprite:
+1. **It opens its eyes** (`src/collect.ts`). It reads `/proc` for zombie
+   processes, measures the disk, checks `sprite-env` services and listens to
+   recent logs for fresh errors. No magic agents: it's a cat reading its own
+   house.
+2. **It decides what gift each finding deserves** (`src/diet.ts`). The rule is
+   feline, and that's why it's simple:
+   - something genuinely valuable (disk at 95%, a fallen service, eight errors
+     in one log) → **a GPU**;
+   - nothing worthy of you (disk at 40%, a one-night zombie) → **a tree leaf**;
+   - something going wrong but still saveable (disk at 85% two nights in a
+     row, three repeated errors) → **fermented tofu**, a delicacy with
+     character. The cat speaks of tofu with respect: it is never something
+     disgusting.
+3. **It adds prose** (`src/narrate.ts`). This is where the model comes in:
+   GLM 5.3 Flash via OpenRouter, through the **Sprites connector**. The cat
+   never sees the API key. The model doesn't choose the gift; the diet already
+   decided. The model only tells the story, in character.
+4. **It leaves it in the lair** (`src/altar.ts`) and, if configured, pushes it
+   to the human's phone.
 
-1. **Abre los ojos** (`src/collect.ts`). Mira `/proc` buscando procesos zombis,
-   mide el disco, revisa los servicios de `sprite-env` y escucha los logs
-   recientes en busca de errores frescos. No hay agentes mágicos: es un gato
-   leyendo su propia casa.
-2. **Decide qué regalo merece cada hallazgo** (`src/diet.ts`). La regla es
-   felina y por eso es simple:
-   - algo valioso de verdad (disco al 95%, servicio caído, ocho errores en un
-     log) → **una GPU**;
-   - nada digno de ti (disco al 40%, un zombi de una noche) → **una hoja de
-     árbol**;
-   - algo que se está podriendo (disco al 85% dos noches seguidas, tres errores
-     repetidos) → **tofu fermentado**.
-3. **Le pone prosa** (`src/narrate.ts`). Aquí sí entra el modelo: GLM 5.3 Flash
-   vía OpenRouter, a través del **conector de Sprites**. El gato nunca ve la
-   API key. El modelo no decide el regalo; la dieta ya decidió. El modelo solo
-   lo cuenta con su carácter pasivo-agresivo.
-4. **Lo deja en el altar** (`src/altar.ts`) y, si está configurado, lo empuja al
-   celular del humano.
+Tree leaves don't spend a single token. Frugality is part of the character.
 
-Las hojas de árbol no gastan un token. La frugalidad es parte del carácter.
+## The nine lives
 
-## Las nueve vidas
+It turns out a Sprite is the closest thing to a cat on Fly.io: both have
+checkpoints.
 
-Resulta que un Sprite es lo más parecido a un gato que hay en Fly.io: en
-ambos casos hay checkpoints.
+`src/lives.ts` implements the pact: the cat takes a Sprite checkpoint before
+anything risky, and when it knocks something off the table (or the human asks
+via `POST /api/revive`), it restores the checkpoint and spends a life. If the
+restoration fails, the life is given back: there is no life for whoever fails
+to revive.
 
-`src/lives.ts` implementa el pacto: el gato toma un checkpoint del Sprite
-antes de algo riesgoso, y cuando se tira algo de la mesa (o el humano se lo
-pide con `POST /api/revive`), restaura el checkpoint y gasta una vida. Si
-la restauración falla, la vida se devuelve: no hay vida para quien no revive.
+The elegant part — the expensive part — is that restoring a checkpoint
+rewinds the disk, and that includes the cat's acta (its persistent record).
+So the cat writes everything down before restoring and reconciles after, so
+its memory survives its own death.
 
-La parte elegante —y la que costó— es que restaurar un checkpoint rebobina el
-disco, y eso incluye el acta del gato. Por eso el gato anota todo antes de
-restaurar y reconcilia después, para que su memoria sobreviva a su propia
-muerte.
+## The lair
 
-## El altar
+`GET /` serves a single page: no frameworks, no CDNs, no build. It shows:
 
-`GET /` sirve una sola página, sin frameworks, sin CDNs, sin build. Muestra:
+- **My opinion of my human**: a confession the cat ruminates once a day from
+  your gifts, your pets and your days of absence.
+- **The lair**: the gifts, newest first, with the cat's narration and the
+  practical dissection of each finding.
+- **Figures**: lives, pets, churus, hunts, GPUs, tofus and leaves.
+- **Talk to the cat**: a chat where it answers in its own voice. While the
+  model thinks you see *“Gatanás is thinking about what to meow back…”*.
+  There's a **Give churu** button — the counter is persistent, and the cat
+  reacts deterministically (no LLM: joy is not outsourced).
+- **How does this site work?** a section at the end explaining the whole
+  trick: single-file HTML via `node:http`, the acta on the Sprite's persistent
+  disk, the hunt cycle, the connector gateway, the rate limits.
 
-- **Mi opinión sobre mi humano**: una confesión que el gato rumia una vez al día
-  a partir de tus regalos, sus caricias y tus días de ausencia.
-- **El altar**: los regalos, del más reciente al más viejo, con la narración del
-  gato y la disección práctica del hallazgo.
-- **Cifras**: vidas, caricias, cacerías, GPUs, tofus y hojas.
-- **Hablarle**: un chat donde el gato contesta con su voz. Acariciarlo sube el
-  contador y el gato responde "Prrrr".
+Everything that comes out of the model is HTML-escaped. A rude narration
+cannot inject markup: there's a test that proves it.
 
-La página escapa todo lo que sale del modelo. Una narración mal educada no
-puede inyectar HTML: hay una prueba que lo verifica.
+The page is in English on purpose — the browser's native translation makes it
+readable in any other language.
 
-## El monedero
+## The wallet
 
-La API key de OpenRouter de esta casa tiene un tope de **6.66 USD**. El gato
-lo sabe (`src/wallet.ts`): caza con un tope diario, mira el gasto real que
-reporta OpenRouter en cada respuesta, y cuando el total se acerca al tope de
-la llave, **ayuna**. Un gato que gasto más de lo que su humano le dio no
-merece churus.
+This house's OpenRouter API key has a cap of **6.66 USD**. The cat knows
+(`src/wallet.ts`): it hunts under a daily spend cap, watches the real cost
+OpenRouter reports on every reply, and when the total gets close to the key
+cap, it **fasts**. A cat that spends more than its human gave it doesn't
+deserve churus.
 
-## Cómo se construye y se arranca
+## Build and run
 
 ```bash
 npm install
 npm run build
-npm test          # 29 pruebas, sin red ni disco real
+npm test          # 36 tests, no network, no real disk
 node dist/main.js
 ```
 
-El altar queda en el puerto 8080, que es el que el proxy del Sprite enruta a
-su URL HTTPS.
+The lair listens on port 8080 — the port the Sprite proxy routes to its HTTPS
+URL.
 
-Para dejarlo corriendo como servicio del Sprite (así vuelve solo cuando el
-Sprite despierta):
+To keep it running as a Sprite service (so it comes back on its own when the
+Sprite wakes):
 
 ```bash
 sprite-env services create gatanas \
@@ -104,78 +114,80 @@ sprite-env services create gatanas \
   --http-port 8080
 ```
 
-## En la terminal del Sprite
+## In the Sprite's terminal
 
-`scripts/sprite-shims.sh` (lo corre el deploy) deja los comandos del gato a
-secas en el PATH, así que desde `sprite console` podés escribir directamente:
-
-```bash
-hunt              # una ronda de cacería
-altar             # el resumen del acta
-lives             # vidas y checkpoints
-meow "texto"      # hablarle al gato
-revive            # se tira de la mesa y revive
-```
-
-## Desde tu máquina
-
-El CLI de Sprites habla con el gato sin abrir consola:
+`scripts/sprite-shims.sh` (run by the deploy) leaves the cat's commands bare
+on the PATH, so from `sprite console` you can just type:
 
 ```bash
-sprite console -s gatanas-the-michi                    # shell dentro del Sprite
-sprite exec -s gatanas-the-michi --no-stdin -- altar   # un comando y fuera
-sprite info -s gatanas-the-michi                       # estado y URL
+hunt              # one hunt round now
+altar             # acta summary (alias: guarida)
+lives             # lives and checkpoints
+meow "text"       # talk to the cat
+churus            # give it a churu
+revive            # knock something off the table and revive
 ```
 
-Lo que va después de `--` va entero en la misma línea: si la partís, el
-resto corre en tu máquina, no en el Sprite. Detalle completo en la
+## From your machine
+
+The Sprites CLI talks to the cat without opening a console:
+
+```bash
+sprite console -s gatanas-the-michi                    # shell inside the Sprite
+sprite exec -s gatanas-the-michi --no-stdin -- altar   # one command and out
+sprite info -s gatanas-the-michi                       # status and URL
+```
+
+Whatever comes after `--` must stay on one line: if you split it, the rest
+runs on your machine, not on the Sprite. Full detail in the
 [wiki](wiki-docs/development/workflow.md).
 
-## Variables de entorno
+## Environment variables
 
-| Variable | Por defecto | Qué hace |
+| Variable | Default | What it does |
 | --- | --- | --- |
-| `PORT` | `8080` | Puerto del altar |
-| `SPRITE_NAME` | `gatanas-the-michi` | Su casa en el plano de control |
-| `GATANAS_HOME` | `~/.gatanas` | Dónde vive su acta |
-| `OPENROUTER_CONNECTION` | ver `.env.example` | ID del conector de OpenRouter |
-| `GATANAS_MODEL_*` | ver `.env.example` | Modelos por tarea (chat: `google/gemma-4-31b-it:free`) |
-| `GATANAS_MODEL_CHAT_FALLBACKS` | `z-ai/glm-5.3-flash` | Reserva del chat si el modelo `:free` está saturado |
-| `GATANAS_HUNT_INTERVAL_SEC` | `900` | Cada cuánto caza (0 = nunca) |
-| `GATANAS_DAILY_BUDGET_USD` | `0.5` | Tope de gasto por día |
-| `GATANAS_LIVES` | `9` | Nunca dudes del gato |
-| `SPRITES_TOKEN` | — | Llave del plano de control, solo para vidas y servicios |
+| `PORT` | `8080` | The lair's port |
+| `SPRITE_NAME` | `gatanas-the-michi` | Its home on the control plane |
+| `GATANAS_HOME` | `~/.gatanas` | Where its acta lives |
+| `OPENROUTER_CONNECTION` | see `.env.example` | OpenRouter connector ID |
+| `GATANAS_MODEL_*` | see `.env.example` | Model per task (chat: `google/gemma-4-31b-it:free`) |
+| `GATANAS_MODEL_CHAT_FALLBACKS` | `z-ai/glm-5.3-flash` | Chat fallback when the `:free` model is saturated |
+| `GATANAS_HUNT_INTERVAL_SEC` | `900` | How often it hunts (0 = never) |
+| `GATANAS_DAILY_BUDGET_USD` | `0.5` | Daily spend cap |
+| `GATANAS_LIVES` | `9` | Never doubt the cat |
+| `SPRITES_TOKEN` | — | Control-plane key, only for lives and services |
 
-`SPRITES_TOKEN` es opcional: sin ella el gato caza, guarda su acta y atiende el
-altar, pero no puede tomar checkpoints ni reiniciar servicios.
+`SPRITES_TOKEN` is optional: without it the cat still hunts, keeps its acta
+and serves the lair, but it can't take checkpoints or restart services.
 
-## La API
+## The API
 
-| Ruta | Qué hace |
+| Route | What it does |
 | --- | --- |
-| `GET /` | el altar |
-| `GET /api/status` | estado, monedero y última opinión |
-| `GET /api/gifts` | los regalos recientes |
-| `GET /api/lives` | vidas y checkpoints |
+| `GET /` | the lair (aliases: `/altar`, `/guarida`) |
+| `GET /api/status` | status, wallet, churus and the latest opinion |
+| `GET /api/gifts` | recent gifts |
+| `GET /api/lives` | lives and checkpoints |
 | `POST /api/chat` | `{ "message": "..." }` |
-| `POST /api/purr` | acariciarlo |
-| `POST /api/hunt` | una cacería ahora |
-| `POST /api/revive` | tirarse de la mesa y revivir (alias: `/api/nahualada`) |
+| `POST /api/purr` | pet it |
+| `POST /api/churus` | give it a churu |
+| `POST /api/hunt` | one hunt round now |
+| `POST /api/revive` | knock something off the table and revive (alias: `/api/nahualada`) |
 
-Hay límites de golpes en las rutas de escritura: un gato aguanta poco tráfico.
+Write routes have per-minute rate limits: a cat tolerates very little traffic.
 
-## Por qué esto es un agente y no un cron
+## Why this is an agent and not a cron
 
-Porque se acuerda de vos. Guarda su acta en su propio disco —el que sobrevive
-al sueño del Sprite—, aprende qué servicios se caen los martes, acumula
-caricias, te forma una opinión escrita, y cuando muere vuelve sabiendo quién
-es. El cron es una tuerca; el gato es un inquilino.
+Because it remembers you. It keeps its acta on its own disk — the one that
+survives the Sprite's sleep — learns which services fall on Tuesdays, counts
+its pets, forms a written opinion of you, and when it dies it comes back
+knowing who it is. A cron is a cog; the cat is a tenant.
 
-## Hecho durante Hacksgiving 2026
+## Built during Hacksgiving 2026
 
-Construido del 26 al 29 de noviembre de 2026 para el hackathon
-[Hacksgiving](https://fly.io/hacksgiving/) de Fly.io. Corre en un **Sprite** y
-habla por dos **conectores de Sprites**: OpenRouter (voz) y GitHub (su propio
-código, que el gato comitea desde dentro de su casa).
+Built November 26–29, 2026 for Fly.io's
+[Hacksgiving](https://fly.io/hacksgiving/) hackathon. It runs on a **Sprite**
+and talks through two **Sprites connectors**: OpenRouter (its voice) and
+GitHub (its own code, which the cat commits from inside its house).
 
 — Gatanás The Michi. prrrr.

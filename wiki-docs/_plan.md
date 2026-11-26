@@ -1,43 +1,44 @@
-# Plan de documentación — gatanas-the-michi
+# Documentation plan — gatanas-the-michi
 
-Proyecto: Gatanás The Michi, agente personal felino que corre dentro de un
-Sprite de Fly.io. Stack: Node 24 + TypeScript, cero dependencias de runtime.
-Idioma de la wiki: español. Alcance: `standard`.
+Project: Gatanás The Michi, a feline personal agent running inside a
+Fly.io Sprite. Stack: Node 24 + TypeScript, zero runtime dependencies.
+Wiki language: English. Scope: `standard`.
 
-## Dominios y cobertura
+## Domains and coverage
 
-| Dominio | Documento | Fuentes |
+| Domain | Document | Sources |
 |---------|-----------|---------|
-| Arquitectura | `architecture/overview.md` | `src/*.ts` completo, `tsconfig.json` |
+| Architecture | `architecture/overview.md` | full `src/*.ts`, `tsconfig.json` |
 | HTTP API | `architecture/routing.md` | `src/altar-server.ts` |
-| Flujos de datos | `architecture/data-flow.md` | `src/hunt.ts`, `src/chat.ts`, `src/opinion.ts`, `src/scheduler.ts` |
-| Feature: caza y dieta | `features/caza-y-dieta.md` | `src/collect.ts`, `src/diet.ts`, `src/prey.ts`, `src/hunt.ts` |
-| Feature: nueve vidas | `features/nueve-vidas.md` | `src/lives.ts`, `src/memory.ts` |
-| Feature: monedero | `features/monedero.md` | `src/wallet.ts`, `src/memory.ts` |
-| Feature: altar y chat | `features/altar-y-chat.md` | `src/altar.ts`, `src/altar-server.ts`, `src/chat.ts`, `src/narrate.ts` |
-| Feature: auto-publicación | `features/auto-publicacion-github.md` | `src/github-publish.ts` |
-| Seguridad | `security/implementation.md` | `src/altar-server.ts`, conectores de Sprites |
-| Despliegue | `deployment/platform.md` | `scripts/deploy.sh`, `sprite-env` |
-| Incidentes | `deployment/troubleshooting.md` | incidentes reales del desarrollo (2026-11-26) |
+| Data flows | `architecture/data-flow.md` | `src/hunt.ts`, `src/chat.ts`, `src/opinion.ts`, `src/scheduler.ts` |
+| Feature: hunt and diet | `features/caza-y-dieta.md` | `src/collect.ts`, `src/diet.ts`, `src/prey.ts`, `src/hunt.ts` |
+| Feature: nine lives | `features/nueve-vidas.md` | `src/lives.ts`, `src/memory.ts` |
+| Feature: wallet | `features/monedero.md` | `src/wallet.ts`, `src/memory.ts` |
+| Feature: the lair and chat | `features/altar-y-chat.md` | `src/altar.ts`, `src/altar-server.ts`, `src/chat.ts`, `src/narrate.ts` |
+| Feature: self-publishing | `features/auto-publicacion-github.md` | `src/github-publish.ts` |
+| Security | `security/implementation.md` | `src/altar-server.ts`, Sprites connectors |
+| Deployment | `deployment/platform.md` | `scripts/deploy.sh`, `sprite-env` |
+| Incidents | `deployment/troubleshooting.md` | real development incidents (2026-11-26) |
 | Testing | `development/testing.md` | `test/*.test.ts`, `tsconfig.test.json` |
 | Workflow | `development/workflow.md` | `package.json`, `README.md` |
 
-## Decisiones de adaptación
+## Adaptation decisions
 
-- Sin `.github/workflows/` → no se crea `ci-cd/`.
-- Sin PWA → no se crea `deployment/pwa.md`.
-- 5 funcionalidades destacadas → directorio `features/` con un archivo por feature.
-- Sin base de datos externa: el "backend" es el propio servidor HTTP del
-  Sprite; se documenta bajo `architecture/` en lugar de `backend/`.
-- Sin monitoreo externo → no se crea `deployment/monitoring.md`.
-- El único inquilino de `utils/` es `types.ts` (reexportaciones); se documenta
-  en `architecture/overview.md` y no amerita directorio propio.
+- No `.github/workflows/` → no `ci-cd/` is created.
+- No PWA → no `deployment/pwa.md` is created.
+- 5 highlighted features → a `features/` directory with one file per
+  feature.
+- No external database: the "backend" is the Sprite's own HTTP server; it
+  is documented under `architecture/` instead of `backend/`.
+- No external monitoring → no `deployment/monitoring.md` is created.
+- The only tenant of `utils/` is `types.ts` (re-exports); it is documented
+  in `architecture/overview.md` and doesn't warrant a directory of its own.
 
-## Estado del Quality Gate
+## Quality Gate status
 
-- [x] Estructura creada y adaptada al proyecto real.
-- [x] Todos los documentos con sección Referencias.
-- [x] Links internos verificados contra archivos existentes.
-- [x] Sin secciones vacías ni placeholders.
-- [x] `quickstart.md` enlaza el 100% de los documentos.
-- [x] Troubleshooting con incidentes respaldados por evidencia del desarrollo.
+- [x] Structure created and adapted to the real project.
+- [x] All documents with a References section.
+- [x] Internal links verified against existing files.
+- [x] No empty sections or placeholders.
+- [x] `quickstart.md` links 100% of the documents.
+- [x] Troubleshooting with incidents backed by development evidence.

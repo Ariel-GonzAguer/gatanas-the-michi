@@ -4,7 +4,8 @@
  * Regla de oro felina:
  *  - Algo útil de verdad → **una GPU** (el regalo que sabe que quieres).
  *  - Nada digno de ti → **una hoja de árbol** (inútil, pero es el gesto).
- *  - Algo podrido que no ha muerto todavía → **tofu fermentado**.
+ *  - Algo que huele a problema pero aún se salva → **tofu fermentado**
+ *    (un manjar con carácter, nunca algo asqueroso).
  *
  * La heurística decide sin gastar un token. El modelo solo entra si la
  * heurística duda, o para ponerle prosa felina al veredicto.
@@ -44,7 +45,7 @@ const LEAF = (reason: string, confidence = 0.85): DietVerdict => ({
   kind: "leaf",
   confidence,
   reason,
-  practical: "Nada que arreglar. El Sprite está bien.",
+  practical: "Nothing to fix. The Sprite is fine.",
 });
 const TOFU = (practical: string, reason: string, confidence = 0.85): DietVerdict => ({
   kind: "tofu",
@@ -64,50 +65,50 @@ export function judgeHeuristic(input: DietInput): DietVerdict | null {
   if (prey.category === "process") {
     if (/zombi/.test(prey.title)) {
       return sightings >= 3
-        ? TOFU("Kill del padre o reinicio del servicio que los creó.", "Zombis de varias noches. Huelen.")
-        : LEAF("Un zombi recién nacido no es un regalo: es tu nevera.");
+        ? TOFU("Kill the parent or restart the service that spawned them.", "Zombies several nights running. I aged this one for you: a strong tofu, best enjoyed with the jar closed.")
+        : LEAF("A newborn zombie is not a gift: it's your fridge.");
     }
-    return LEAF("Procesos largos son normales en un Sprite que duerme.");
+    return LEAF("Long-running processes are normal in a sleeping Sprite.");
   }
 
   if (prey.category === "disk") {
-    if (/disco al (\d+(\.\d+)?)%/.test(prey.title)) {
-      const pct = Number(prey.title.match(/disco al (\d+(\.\d+)?)%/)![1]);
-      if (pct >= 92) return GPU("Limpiar /tmp, logs y checkpoints viejos; luego reiniciar.", "Casi sin casa. Esto es un regalo de verdad.", 0.95);
-      if (pct >= 80) return sightings >= 2 ? TOFU("Mover datos fríos o borrar checkpoints.", "Crece cada noche. Va a podrirse.") : LEAF("Aún hay sitio.");
+    if (/disk at (\d+(\.\d+)?)%/.test(prey.title)) {
+      const pct = Number(prey.title.match(/disk at (\d+(\.\d+)?)%/)![1]);
+      if (pct >= 92) return GPU("Clean /tmp, logs and old checkpoints; then reboot.", "Almost homeless. This is a real gift.", 0.95);
+      if (pct >= 80) return sightings >= 2 ? TOFU("Move cold data or delete checkpoints.", "It grows every night. I'm aging this one for you: still a delicacy if you act today.") : LEAF("There's still room.");
     }
-    return LEAF("No hay prisa.");
+    return LEAF("No rush.");
   }
 
   if (prey.category === "service") {
-    if (/detenido/.test(prey.title)) {
+    if (/stopped/.test(prey.title)) {
       return livesRemaining >= 1
-        ? GPU("Reiniciar el servicio con `sprite-env services restart <nombre>`.", "Un servicio caído es un ratón que se escapó.")
-        : TOFU("Decidir si ese servicio debe existir.", "¿Apagado o muerto? No me quedan vidas para averiguarlo.", 0.6);
+        ? GPU("Restart the service with `sprite-env services restart <name>`.", "A fallen service is a mouse that got away.")
+        : TOFU("Decide whether that service should exist.", "Stopped or dead? I have no lives left to find out.", 0.6);
     }
-    return LEAF("Servicio vivo.");
+    return LEAF("Service alive.");
   }
 
   if (prey.category === "log") {
-    if (/gigante/.test(prey.title)) {
-      return sightings >= 2 ? TOFU("truncar el log y revisar si hay un error en bucle.", "Cada noche más gordo: esto va a llenarte la caja.") : LEAF("Solo estaba gordo, no podrido.");
+    if (/huge/.test(prey.title)) {
+      return sightings >= 2 ? TOFU("Truncate the log and check for an error in a loop.", "Fatter every night: it's fermenting nicely, but don't let it fill your box.") : LEAF("It was just fat, nothing more.");
     }
-    if (/errores frescos/.test(prey.title)) {
+    if (/fresh errors/.test(prey.title)) {
       // 3 errores son ruido; muchos, un regalo.
       const matches = prey.evidence.match(/\b(error|fatal|panic|traceback|exception)\b/gi);
       const count = matches ? matches.length : 0;
-      if (count >= 8) return GPU("Buscar el stack en el log y corregir el throw.", `Escuché ${count} gritos en la misma pared. Eso no es un ruido: es un gato atrapado.`, 0.95);
-      if (count >= 3) return TOFU("Mirar si el log repite el mismo error: puede ser un bucle de reintentos.", "Repite el mismo grito. Esto se pudre.");
+      if (count >= 8) return GPU("Find the stack in the log and fix the throw.", `I heard ${count} screams in the same wall. That's not noise: it's a trapped cat.`, 0.95);
+      if (count >= 3) return TOFU("Check whether the log repeats the same error: it may be a retry loop.", "It repeats the same cry every night. An acquired taste: savor it, then break the loop.");
     }
-    return LEAF("Un log normal es un log aburrido. Perfecto.");
+    return LEAF("A normal log is a boring log. Perfect.");
   }
 
   if (prey.category === "arena") {
-    return GPU("Vaciar /tmp (`find /tmp -type f -mtime +1 -delete`).", "Caja de arena llena. Es lo más asqueroso y lo más valioso: te lo traigo con todo el asco.");
+    return GPU("Empty /tmp (`find /tmp -type f -mtime +1 -delete`).", "A full litter box. The most disgusting and the most valuable thing: I bring it to you with all the disgust.");
   }
 
   if (prey.category === "certificate") {
-    if (/vence/.test(prey.title)) return TOFU("Renovar el certificado ya.", "La leche agria: aún sirve, pero no.");
+    if (/expires/.test(prey.title)) return TOFU("Renew the certificate now.", "Aged like good tofu: still excellent, but its best-before date is close.");
   }
 
   return null;
@@ -118,7 +119,7 @@ export function judgeHeuristic(input: DietInput): DietVerdict | null {
  * Es una función pura: la usan tanto el motor real como las pruebas.
  */
 export function chooseGift(input: DietInput, heuristic: DietVerdict | null): DietVerdict {
-  const base = heuristic ?? judgeHeuristic(input) ?? LEAF("Nada que ver aquí.");
+  const base = heuristic ?? judgeHeuristic(input) ?? LEAF("Nothing to see here.");
   const rejected = input.rejectedKinds ?? [];
   // Un gato que te dio tofu tres veces y lo rechazaste pasa a la hoja.
   if (base.kind === "tofu" && rejected.filter((k) => k === "tofu").length >= 2) {
@@ -126,7 +127,7 @@ export function chooseGift(input: DietInput, heuristic: DietVerdict | null): Die
   }
   // GPU sin vidas: el gato no puede comprometerse a cuidar nada.
   if (base.kind === "gpu" && input.livesRemaining === 0) {
-    return { ...base, kind: "tofu", reason: `${base.reason} Pero no me quedan vidas para cuidarlo.` };
+    return { ...base, kind: "tofu", reason: `${base.reason} But I have no lives left to take care of it.` };
   }
   return base;
 }

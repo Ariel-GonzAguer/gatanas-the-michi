@@ -27,31 +27,31 @@ function preys(): Prey[] {
   const at = "2026-11-26T18:00:00.000Z";
   return [
     {
-      key: "disk:este Sprite:disco al 96.0%",
+      key: "disk:this Sprite:disk at 96.0%",
       category: "disk",
-      title: "disco al 96.0%",
-      evidence: "0.2 GB libres",
-      host: "este Sprite",
+      title: "disk at 96.0%",
+      evidence: "0.2 GB free",
+      host: "this Sprite",
       sightings: 1,
       firstSeenAt: at,
       lastSeenAt: at,
     },
     {
-      key: "arena:este Sprite:caja de arena (/tmp) llena",
+      key: "arena:this Sprite:litter box (/tmp) full",
       category: "arena",
-      title: "caja de arena (/tmp) llena",
+      title: "litter box (/tmp) full",
       evidence: "900 MB",
-      host: "este Sprite",
+      host: "this Sprite",
       sightings: 1,
       firstSeenAt: at,
       lastSeenAt: at,
     },
     {
-      key: "process:este Sprite:proceso zombi node",
+      key: "process:this Sprite:zombie process node",
       category: "process",
-      title: "proceso zombi node",
+      title: "zombie process node",
       evidence: "pid 1234",
-      host: "este Sprite",
+      host: "this Sprite",
       sightings: 1,
       firstSeenAt: at,
       lastSeenAt: at,
@@ -72,7 +72,7 @@ class FakeVoice {
   }
   async chat(_task: string, messages: ChatMessage[]): Promise<VoiceReply> {
     this.calls.push(messages);
-    return { content: "Mae, traje algo. mrrp.", tokens: 100, cost: 0.0001 };
+    return { content: "Mae, brought you something. prrrr.", tokens: 100, cost: 0.0001 };
   }
 }
 
@@ -102,7 +102,7 @@ async function engine(opts: { budgetUsd?: number; voice?: FakeVoice | null } = {
   return { e, memory, wallet, voice, delivered };
 }
 
-test("trae GPUs y tofus y deja las hojas sin tokens", async () => {
+test("brings GPUs and tofus and spends no tokens on leaves", async () => {
   const { e, memory, voice } = await engine();
   const out = await e.hunt("manual");
   assert.equal(out.ran, true);
@@ -113,7 +113,7 @@ test("trae GPUs y tofus y deja las hojas sin tokens", async () => {
   assert.equal(memory.state.gifts.length, 3);
 });
 
-test("no repite el mismo hallazgo el mismo día", async () => {
+test("does not repeat the same finding on the same day", async () => {
   const { e, memory } = await engine();
   await e.hunt("manual");
   const before = memory.state.gifts.length;
@@ -122,15 +122,15 @@ test("no repite el mismo hallazgo el mismo día", async () => {
   assert.equal(memory.state.gifts.length, before);
 });
 
-test("con el monedero vacío no caza", async () => {
+test("with an empty wallet it does not hunt", async () => {
   const { e, memory } = await engine({ budgetUsd: 0 });
   memory.recordCharge(0.2);
   const out = await e.hunt("manual");
   assert.equal(out.ran, false);
-  assert.match(out.reason ?? "", /presupuesto/);
+  assert.match(out.reason ?? "", /budget/);
 });
 
-test("si la entrega falla, el regalo igual queda en el altar", async () => {
+test("if delivery fails, the gift still lands in the lair", async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "gatanas-hunt-deliver-"));
   const cfg = loadConfig({ home: dir, lives: 9 });
   const memory = new Memory(path.join(dir, "memory.json"), "Gatanás The Michi");
@@ -151,7 +151,7 @@ test("si la entrega falla, el regalo igual queda en el altar", async () => {
   assert.ok(memory.state.gifts.length > 0);
 });
 
-test("el gasto se acumula en el acta del gato", async () => {
+test("spend accumulates in the cat's acta", async () => {
   const { e, wallet, memory } = await engine();
   await e.hunt("manual");
   wallet.charge(0.25, 0);
