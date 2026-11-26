@@ -121,7 +121,7 @@ on the PATH, so from `sprite console` you can just type:
 
 ```bash
 hunt              # one hunt round now
-altar             # acta summary (alias: guarida)
+lair              # acta summary (aliases: altar, guarida)
 lives             # lives and checkpoints
 meow "text"       # talk to the cat
 churus            # give it a churu
@@ -134,7 +134,7 @@ The Sprites CLI talks to the cat without opening a console:
 
 ```bash
 sprite console -s gatanas-the-michi                    # shell inside the Sprite
-sprite exec -s gatanas-the-michi --no-stdin -- altar   # one command and out
+sprite exec -s gatanas-the-michi --no-stdin -- lair    # one command and out
 sprite info -s gatanas-the-michi                       # status and URL
 ```
 
