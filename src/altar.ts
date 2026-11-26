@@ -8,6 +8,7 @@
  */
 import type { Gift } from "./prey.js";
 import { giftGlyph, giftLabel } from "./prey.js";
+import { opinionBody } from "./opinion.js";
 import type { GatanasMemory } from "./memory.js";
 import { NineLives } from "./lives.js";
 
@@ -40,7 +41,7 @@ export function altarHtml(s: AltarSnapshot): string {
 <title>${esc(s.name)} · the lair of gifts</title>
 <meta name="description" content="A street cat lives inside a Fly.io Sprite and brings you gifts of dubious value.">
 <meta property="og:title" content="${esc(s.name)} · the lair of gifts">
-<meta property="og:description" content="${esc(s.memory.opinion?.quote ?? "The cat still watches you without an opinion.")}">
+<meta property="og:description" content="${esc(s.memory.opinion ? opinionBody(s.memory.opinion.quote) : "The cat still watches you without an opinion.")}">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,${encodeURIComponent(CAT_FAVICON)}">
 <style>${CSS}</style>
@@ -63,7 +64,7 @@ export function altarHtml(s: AltarSnapshot): string {
 
   <section class="opinion" aria-label="The cat's opinion of you">
     <h2>My opinion of my human</h2>
-    <p>${s.memory.opinion ? esc(s.memory.opinion.quote) : "This human hasn't given me reasons to opine yet. Which is, in fact, an opinion."}</p>
+    <p>${s.memory.opinion ? esc(opinionBody(s.memory.opinion.quote)) : "This human hasn't given me reasons to opine yet. Which is, in fact, an opinion."}</p>
   </section>
 
   <section class="guarida" aria-label="The lair of gifts">

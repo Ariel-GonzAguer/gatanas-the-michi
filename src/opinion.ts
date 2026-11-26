@@ -15,6 +15,13 @@ import type { GatanasMemory } from "./memory.js";
 
 export const CONFESSION_PREFIX = "My opinion of my human:";
 
+/** The confession without its prefix, for places that already announce it (the lair's <h2>). */
+export function opinionBody(quote: string): string {
+  return quote.startsWith(CONFESSION_PREFIX)
+    ? quote.slice(CONFESSION_PREFIX.length).trim()
+    : quote;
+}
+
 export interface RuminationInput {
   memory: GatanasMemory;
   /** Día de la semana y horas en el Sprite, para el tono. */

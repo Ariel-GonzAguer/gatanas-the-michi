@@ -33,6 +33,11 @@ async function boot() {
     host: "this Sprite",
     at: new Date().toISOString(),
   });
+  memory.setOpinion({
+    quote: "My opinion of my human: I brought them 1 valuable thing. They do fine, even if they don't give me churus for it.",
+    ts: new Date().toISOString(),
+    tokens: 0,
+  });
   await memory.save();
   const wallet = new Wallet(cfg, memory);
   const lives = new NineLives(cfg, memory, null);
@@ -66,6 +71,9 @@ test("the lair is served at / and shows the gift", async () => {
     assert.match(html, /Gatanás The Michi/);
     assert.match(html, /A GPU/);
     assert.match(html, /Clean \/tmp/);
+    assert.match(html, /I brought them 1 valuable thing/);
+    // The <h2> already announces the opinion; the quote must not repeat the prefix.
+    assert.ok(!html.includes("My opinion of my human:"));
     assert.equal(res.headers.get("x-frame-options"), "DENY");
   } finally {
     server.close();
