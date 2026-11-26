@@ -50,7 +50,7 @@ GATANAS_HOME=/tmp/gato PORT=8099 GATANAS_HUNT_INTERVAL_SEC=0 npm start
 The public repo is NOT pushed with `git push`: it is published from inside
 the Sprite with `src/github-publish.ts` (Git Data API through the OAuth
 connector). Full flow in
-[self-publishing](../features/auto-publicacion-github.md).
+[self-publishing](../features/self-publishing-on-github.md).
 The local directory `/data/workspace/gatanas` is the editing mirror; the
 published source of truth is the Sprite's working tree.
 
@@ -135,6 +135,6 @@ real incidents with cause and solution.
 
 - [Testing](testing.md)
 - [Deployment on Sprites](../deployment/platform.md)
-- [Self-publishing](../features/auto-publicacion-github.md)
+- [Self-publishing](../features/self-publishing-on-github.md)
 - Sprites CLI: `sprite --help` (console, exec, proxy, info)
 - Real scripts: `package.json`, `scripts/deploy.sh`

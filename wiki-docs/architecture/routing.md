@@ -86,7 +86,7 @@ no external files) and `data:` images (the SVG favicon). See
 
 ## References
 
-- [The lair and chat](../features/altar-y-chat.md)
+- [The lair and chat](../features/the-lair-and-chat.md)
 - [Data flows](data-flow.md)
 - Source file: `src/altar-server.ts`
 - Page served: `src/altar.ts`

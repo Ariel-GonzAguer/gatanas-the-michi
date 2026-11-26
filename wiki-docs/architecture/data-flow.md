@@ -30,7 +30,7 @@ Trigger: the `Scheduler` every `GATANAS_HUNT_INTERVAL_SEC` (900 s),
 Steps:
 
 1. `Wallet.canSpend()` decides whether the round starts (the daily cap and
-   the key's cap; see [the wallet](../features/monedero.md)). If it doesn't
+   the key's cap; see [the wallet](../features/wallet.md)). If it doesn't
    authorize, the hunt doesn't run and the reason lands in the log.
 2. `collectLocalPrey` inventories the system itself: disk percentage, the
    sandbox (`/tmp` > 512 MiB), zombie processes from `/proc`, fresh errors
@@ -109,6 +109,6 @@ Scheduler (every 1 h) ──→ shouldRuminate ──→ ruminate(voice, input)
 
 ## References
 
-- [Hunt and diet](../features/caza-y-dieta.md)
-- [The lair and chat](../features/altar-y-chat.md)
+- [Hunt and diet](../features/hunting-and-diet.md)
+- [The lair and chat](../features/the-lair-and-chat.md)
 - Source files: `src/hunt.ts`, `src/chat.ts`, `src/opinion.ts`, `src/scheduler.ts`

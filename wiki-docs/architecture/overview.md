@@ -98,6 +98,6 @@ solution in [troubleshooting](../deployment/troubleshooting.md).
 
 - [Data flows](data-flow.md)
 - [HTTP API](routing.md)
-- [Hunt and diet](../features/caza-y-dieta.md)
+- [Hunt and diet](../features/hunting-and-diet.md)
 - Source file: `src/main.ts`
 - Configuration: `src/config.ts`, `.env.example`

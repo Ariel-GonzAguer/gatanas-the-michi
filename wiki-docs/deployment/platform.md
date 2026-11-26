@@ -62,7 +62,7 @@ daily budget 0.5 USD, 9 lives) and are overridden with the service's
   there; for other processes the folder is read-only).
 - **Public URL**: `url_settings.auth: public` (a demo decision).
 - **Checkpoints**: through the control plane; they are the basis of the
-  [nine lives](../features/nueve-vidas.md).
+  [nine lives](../features/nine-lives.md).
 - **Service state**: `sprite-env services list` inside the Sprite, or
   `GET /api/status` from outside.
 
@@ -73,7 +73,7 @@ See [troubleshooting](troubleshooting.md): empty replies from the model,
 
 ## References
 
-- [Repo self-publishing](../features/auto-publicacion-github.md)
-- [Nine lives](../features/nueve-vidas.md) (checkpoints)
+- [Repo self-publishing](../features/self-publishing-on-github.md)
+- [Nine lives](../features/nine-lives.md) (checkpoints)
 - Script: `scripts/deploy.sh`
 - Full variables: `.env.example`

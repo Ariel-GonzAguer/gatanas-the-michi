@@ -44,7 +44,7 @@ narration and verifies they reach the HTML escaped. The page's JS uses
   restricts each connector to Sprites with the `gatanas` label.
 - The GitHub OAuth token stays on the gateway side; the cat makes signed
   calls without possessing it (see
-  [self-publishing](../features/auto-publicacion-github.md)).
+  [self-publishing](../features/self-publishing-on-github.md)).
 - `SPRITES_TOKEN` (control plane: checkpoints, services, exec) is
   optional and only passed as a service environment variable. Without it,
   the agent loses lives and restarts, not observability or the lair.
@@ -56,7 +56,7 @@ narration and verifies they reach the HTML escaped. The page's JS uses
 | Inflating the severity of findings | Classification is pure heuristic (`diet.ts`); the model only words the prose |
 | Injecting HTML through a narration | `esc()` + injection test + `textContent` on the client |
 | Prompt injection from chat | The message travels as data of a single turn; there are no tools and no actions executed from chat |
-| Runaway spend | Wallet with a daily cap and a key cap (see [the wallet](../features/monedero.md)) |
+| Runaway spend | Wallet with a daily cap and a key cap (see [the wallet](../features/wallet.md)) |
 | DoS via tokens | Per-route rate limiters + `GATANAS_DAILY_TOKEN_BUDGET` |
 
 The cat doesn't execute actions requested by chat: no tools, no shell from
@@ -76,6 +76,6 @@ which are rate-limited and (in the lives case) protected by
 ## References
 
 - [HTTP API](../architecture/routing.md) (headers and per-route rate limiters)
-- [The lair and chat](../features/altar-y-chat.md) (chat-thread escaping)
-- [Self-publishing](../features/auto-publicacion-github.md)
+- [The lair and chat](../features/the-lair-and-chat.md) (chat-thread escaping)
+- [Self-publishing](../features/self-publishing-on-github.md)
 - Source files: `src/altar-server.ts`, `src/altar.ts`

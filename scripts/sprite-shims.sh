@@ -9,6 +9,16 @@ set -euo pipefail
 
 DIR="${GATANAS_DIR:-/home/sprite/gatanas-the-michi}"
 BIN="${GATANAS_BIN:-/usr/local/bin}"
+# Defensa: estos valores terminan interpolados dentro de los shims y en rutas
+# de sistema. Solo se aceptan formas sanas, sin espacios ni metacaracteres.
+case "$DIR" in
+  /home/sprite/*|/data/*) : ;;
+  *) echo "GATANAS_DIR debe vivir bajo /home/sprite o /data (recibido: $DIR)" >&2; exit 1 ;;
+esac
+case "$BIN" in
+  /usr/local/bin|/home/sprite/.local/bin) : ;;
+  *) echo "GATANAS_BIN solo puede ser /usr/local/bin o /home/sprite/.local/bin (recibido: $BIN)" >&2; exit 1 ;;
+esac
 SUDO=""
 [ -w "$BIN" ] || SUDO="sudo"
 

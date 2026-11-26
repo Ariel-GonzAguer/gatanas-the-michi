@@ -38,11 +38,11 @@ persistent record). Node 24 + TypeScript, zero runtime dependencies.
 - [Data flows](architecture/data-flow.md) — hunt, conversation, rumination.
 
 ### Highlighted features
-- [Hunt and diet](features/caza-y-dieta.md) — GPU/leaf/tofu heuristic with exact thresholds.
-- [Nine lives](features/nueve-vidas.md) — Sprite checkpoints as lives; the acta survives rewinding.
-- [Wallet](features/monedero.md) — budget against the key's cap; the cat fasts.
-- [The lair and chat](features/altar-y-chat.md) — the public page and the chat's model chain.
-- [Repo self-publishing](features/auto-publicacion-github.md) — commits through the GitHub API via the OAuth connector.
+- [Hunt and diet](features/hunting-and-diet.md) — GPU/leaf/tofu heuristic with exact thresholds.
+- [Nine lives](features/nine-lives.md) — Sprite checkpoints as lives; the acta survives rewinding.
+- [Wallet](features/wallet.md) — budget against the key's cap; the cat fasts.
+- [The lair and chat](features/the-lair-and-chat.md) — the public page and the chat's model chain.
+- [Repo self-publishing](features/self-publishing-on-github.md) — commits through the GitHub API via the OAuth connector.
 
 ### Security
 - [Implementation](security/implementation.md) — HTTP perimeter, escaping, BYOK custody, model limits.

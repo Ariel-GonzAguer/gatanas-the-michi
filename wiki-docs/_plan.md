@@ -11,11 +11,11 @@ Wiki language: English. Scope: `standard`.
 | Architecture | `architecture/overview.md` | full `src/*.ts`, `tsconfig.json` |
 | HTTP API | `architecture/routing.md` | `src/altar-server.ts` |
 | Data flows | `architecture/data-flow.md` | `src/hunt.ts`, `src/chat.ts`, `src/opinion.ts`, `src/scheduler.ts` |
-| Feature: hunt and diet | `features/caza-y-dieta.md` | `src/collect.ts`, `src/diet.ts`, `src/prey.ts`, `src/hunt.ts` |
-| Feature: nine lives | `features/nueve-vidas.md` | `src/lives.ts`, `src/memory.ts` |
-| Feature: wallet | `features/monedero.md` | `src/wallet.ts`, `src/memory.ts` |
-| Feature: the lair and chat | `features/altar-y-chat.md` | `src/altar.ts`, `src/altar-server.ts`, `src/chat.ts`, `src/narrate.ts` |
-| Feature: self-publishing | `features/auto-publicacion-github.md` | `src/github-publish.ts` |
+| Feature: hunt and diet | `features/hunting-and-diet.md` | `src/collect.ts`, `src/diet.ts`, `src/prey.ts`, `src/hunt.ts` |
+| Feature: nine lives | `features/nine-lives.md` | `src/lives.ts`, `src/memory.ts` |
+| Feature: wallet | `features/wallet.md` | `src/wallet.ts`, `src/memory.ts` |
+| Feature: the lair and chat | `features/the-lair-and-chat.md` | `src/altar.ts`, `src/altar-server.ts`, `src/chat.ts`, `src/narrate.ts` |
+| Feature: self-publishing | `features/self-publishing-on-github.md` | `src/github-publish.ts` |
 | Security | `security/implementation.md` | `src/altar-server.ts`, Sprites connectors |
 | Deployment | `deployment/platform.md` | `scripts/deploy.sh`, `sprite-env` |
 | Incidents | `deployment/troubleshooting.md` | real development incidents (2026-11-26) |

@@ -56,6 +56,6 @@ no automated suite: it's validated with the manual smoke documented in
 
 ## References
 
-- [Hunt and diet](../features/caza-y-dieta.md) (the busiest suite)
+- [Hunt and diet](../features/hunting-and-diet.md) (the busiest suite)
 - [Development workflow](workflow.md)
 - Configuration: `tsconfig.test.json`, `package.json`

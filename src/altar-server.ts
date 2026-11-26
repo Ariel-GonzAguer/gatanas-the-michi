@@ -161,7 +161,9 @@ export function createServer(deps: ServerDeps): Server {
         const body = await readBody(req);
         let message = "";
         try {
-          message = String((JSON.parse(body) as { message?: unknown }).message ?? "");
+          const parsed = (JSON.parse(body) as { message?: unknown }).message;
+          if (typeof parsed !== "string") throw new Error("message must be a string");
+          message = parsed;
         } catch {
           json(res, 400, { reply: "That wasn't a valid meow." });
           return;
@@ -242,7 +244,8 @@ export function createServer(deps: ServerDeps): Server {
         const body = await readBody(req);
         let reason = "because I felt like it";
         try {
-          reason = (JSON.parse(body || "{}") as { reason?: string }).reason ?? reason;
+          const parsed = (JSON.parse(body || "{}") as { reason?: unknown }).reason;
+          if (typeof parsed === "string" && parsed.trim()) reason = parsed;
         } catch {
           /* el motivo es opcional */
         }

@@ -12,6 +12,14 @@ NAME="${NAME:-gatanas}"
 APP_DIR="${APP_DIR:-/home/sprite/gatanas-the-michi}"
 : "${SPRITES_TOKEN:?Falta SPRITES_TOKEN (dashboard de Fly → Sprites → Tokens)}"
 
+# Defensa: SPRITE, NAME y APP_DIR se interpolan dentro de un `bash -c` que
+# corre en el Sprite. Solo se aceptan formas sanas (sin espacios, $, ;, `...).
+for v in "$SPRITE" "$NAME" "$APP_DIR"; do
+  case "$v" in
+    *[!A-Za-z0-9._/-]*) echo "valor inválido para el deploy: $v" >&2; exit 1 ;;
+  esac
+done
+
 cd "$(dirname "$0")/.."
 echo "→ compilando"
 npm run --silent build

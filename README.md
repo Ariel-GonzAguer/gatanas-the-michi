@@ -154,6 +154,7 @@ runs on your machine, not on the Sprite. Full detail in the
 | `GATANAS_MODEL_CHAT_FALLBACKS` | `z-ai/glm-5.3-flash` | Chat fallback when the `:free` model is saturated |
 | `GATANAS_HUNT_INTERVAL_SEC` | `900` | How often it hunts (0 = never) |
 | `GATANAS_DAILY_BUDGET_USD` | `0.5` | Daily spend cap |
+| `GATANAS_DAILY_TOKEN_BUDGET` | `40000` | Daily token cap, independent of the USD one |
 | `GATANAS_LIVES` | `9` | Never doubt the cat |
 | `SPRITES_TOKEN` | — | Control-plane key, only for lives and services |
 
