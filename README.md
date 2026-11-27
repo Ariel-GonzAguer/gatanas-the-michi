@@ -168,12 +168,19 @@ and serves the lair, but it can't take checkpoints or restart services.
 | `GET /` | the lair (aliases: `/altar`, `/guarida`) |
 | `GET /api/status` | status, wallet, churus and the latest opinion |
 | `GET /api/gifts` | recent gifts |
-| `GET /api/lives` | lives and checkpoints |
+| `GET /api/lives` | lives and checkpoints (each spent life carries its file name) |
+| `GET /api/census` | the real process census: total, zombies (gerald), the elder |
+| `GET /api/journal` | the night journal: one real line per hunt, from disk |
 | `POST /api/chat` | `{ "message": "..." }` |
 | `POST /api/purr` | pet it |
 | `POST /api/churus` | give it a churu |
 | `POST /api/hunt` | one hunt round now |
 | `POST /api/revive` | knock something off the table and revive (alias: `/api/nahualada`) |
+
+Every response carries an `X-Cat-Tax` header — he collects fast. `robots.txt`
+is his door policy (`Disallow: /tofu` — it is aging), unknown pages get his
+404 opinion, and rate limits answer with a `Retry-After` stating how long his
+nap lasts.
 
 Write routes have per-minute rate limits: a cat tolerates very little traffic.
 
