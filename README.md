@@ -15,7 +15,7 @@ fast before the key cap, a written daily opinion of his human, a churu counter,
 a public lair at https://gatanas-the-michi-b6zf5.sprites.app — and he
 **publishes this very repo himself**, from inside the Sprite, through the
 GitHub connector (no `git push` involved). TypeScript, zero runtime
-dependencies, 43 tests. Built for Hacksgiving 2026. prrrr.
+dependencies, 61 tests. Built for Hacksgiving 2026. prrrr.
 
 ## What it does, exactly
 
@@ -96,7 +96,7 @@ deserve churus.
 ```bash
 npm install
 npm run build
-npm test          # 43 tests, no network, no real disk
+npm test          # 61 tests, no network, no real disk
 node dist/main.js
 ```
 
