@@ -28,11 +28,12 @@ cat goes hunting around the Sprite:
    house.
 2. **It decides what gift each finding deserves** (`src/diet.ts`). The rule is
    feline, and that's why it's simple:
-   - something genuinely valuable (disk at 95%, a fallen service, eight errors
-     in one log) → **a GPU**;
-   - nothing worthy of you (disk at 40%, a one-night zombie) → **a tree leaf**;
-   - something going wrong but still saveable (disk at 85% two nights in a
-     row, three repeated errors) → **fermented tofu**, a delicacy with
+   - something genuinely valuable (disk at 92% or worse, a fallen service,
+     eight errors in one log) → **a GPU**;
+   - nothing worthy of you (disk under 80%, a first-night sighting, a
+     one-night zombie) → **a tree leaf**;
+   - something going wrong but still saveable (disk at 80% or worse two
+     nights in a row, three repeated errors) → **fermented tofu**, a delicacy with
      character. The cat speaks of tofu with respect: it is never something
      disgusting.
 3. **It adds prose** (`src/narrate.ts`). This is where the model comes in:
@@ -125,7 +126,7 @@ lair              # acta summary (aliases: altar, guarida)
 lives             # lives and checkpoints
 meow "text"       # talk to the cat
 churus            # give it a churu
-revive            # knock something off the table and revive
+revive            # knock something off the table and revive (alias: nahualada)
 ```
 
 ## From your machine
@@ -149,7 +150,7 @@ runs on your machine, not on the Sprite. Full detail in the
 | `PORT` | `8080` | The lair's port |
 | `SPRITE_NAME` | `gatanas-the-michi` | Its home on the control plane |
 | `GATANAS_HOME` | `~/.gatanas` | Where its acta lives |
-| `OPENROUTER_CONNECTION` | see `.env.example` | OpenRouter connector ID |
+| `OPENROUTER_CONNECTION` | `BQCIyKoHE5fYfVaZy5gDbg` (baked-in default) | OpenRouter connector ID |
 | `GATANAS_MODEL_*` | see `.env.example` | Model per task (chat: `google/gemma-4-31b-it:free`) |
 | `GATANAS_MODEL_CHAT_FALLBACKS` | `z-ai/glm-5.3-flash` | Chat fallback when the `:free` model is saturated |
 | `GATANAS_HUNT_INTERVAL_SEC` | `900` | How often it hunts (0 = never) |
@@ -171,6 +172,8 @@ and serves the lair, but it can't take checkpoints or restart services.
 | `GET /api/lives` | lives and checkpoints (each spent life carries its file name) |
 | `GET /api/census` | the real process census: total, zombies (gerald), the elder |
 | `GET /api/journal` | the night journal: one real line per hunt, from disk |
+| `GET /api/live` | the live channel (SSE): counters, gifts and opinion, streaming |
+| `GET /robots.txt` | the crawl rules, with cattitude |
 | `POST /api/chat` | `{ "message": "..." }` |
 | `POST /api/purr` | pet it |
 | `POST /api/churus` | give it a churu |
